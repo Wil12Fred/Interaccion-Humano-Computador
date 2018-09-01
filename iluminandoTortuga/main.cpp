@@ -78,7 +78,7 @@ void display(void) {
 	SetLight( LOCAL_MyLights[2] );
 	glPushMatrix();
 	glColor3f(1.0,1.0,0.0);
-	draw_bottom();
+	drawSphereTurtle();
 	switch( current_light ){
 		case 0:
 			At[0] = LOCAL_MyLights[current_light]->position[0];
@@ -585,15 +585,15 @@ static void SpecialKey ( int key, int x, int y ){
 
 
 int main(int argc, char** argv) {
-	bool loadout = Loader.LoadFile("model.obj");
+	/*bool loadout = Loader.LoadFile("model.obj");
 	if(!loadout){
 		printf("Error\n");
 		return 0;
-	}
+	}*/
 	glutInit(&argc, argv);
 
 	// Colocamos la cámara en (0,1,-3) mirando hacia (0,0,0)
-	MiCamara = new Camara(0.0f, 1.0f, -100.0f);
+	MiCamara = new Camara(0.0f, 1.0f, -3.0f);
 
 	glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(512, 512);
