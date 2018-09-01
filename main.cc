@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+//#include <conio.h>
 //#include <stlib.h>
 #define GL_GLEXT_PROTOTYPES
 #ifdef __APPLE__
@@ -8,9 +10,15 @@
 #include <GL/glut.h>
 #endif
 #include "obj.h"
+bool game=true;
+#include "leapmotion.h"
 
 double rotate_y=0; 
 double rotate_x=0;
+
+SampleListener listener;
+Controller controller;
+
 
 void myInit() {
 	glEnable(GL_DEPTH_TEST);
@@ -20,6 +28,9 @@ void myInit() {
 }
 
 void specialKeys( int key, int x, int y ) {
+	/*if (argc > 1 && strcmp(argv[1], "--bg") == 0)
+		controller.setPolicy(Leap::Controller::POLICY_BACKGROUND_FRAMES);*/
+	
 	//  Flecha derecha: aumentar rotación 5 grados
 	if (key == GLUT_KEY_RIGHT)
 		rotate_y += 5;
@@ -33,6 +44,8 @@ void specialKeys( int key, int x, int y ) {
 	else if (key == GLUT_KEY_DOWN)
 		rotate_x -= 5;
 	//  Solicitar actualización de visualización
+	else if (key == GLUT_KEY_F1)
+		game=!game;
 	glutPostRedisplay();
  
 }
@@ -49,6 +62,28 @@ void draw_line(objl::Vertex v1, objl::Vertex v2, double width=2.5) {//Corregir
 		glVertex3f(v1.Position.X, v1.Position.Y, v1.Position.Z);
 		glVertex3f(v2.Position.X, v2.Position.Y, v2.Position.Z);
 	glEnd();
+}
+
+void draw_hands(){
+	for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+		const Hand hand = *hl;
+		const FingerList fingers = hand.fingers();
+		for (FingerList::const_iterator fl = fingers.begin(); fl != fingers.end(); ++fl) {
+			const Finger finger = *fl;
+			for (int b = 0; b < 4; ++b) { 
+				Bone::Type boneType = static_cast<Bone::Type>(b);
+				Bone bone = finger.bone(boneType);
+				Vector boneStart = bone.prevJoint();
+				Vector boneEnd = bone.nextJoint();
+				std::cout << boneStart.x << " " << boneStart.y << " " << boneStart.z << std::endl; 
+				glBegin(GL_LINES);
+					glVertex3f(boneStart.x, boneStart.y, boneStart.z);
+					glVertex3f(boneEnd.x, boneEnd.y,boneEnd.z);
+				glEnd();
+			}
+		}
+	}
+	std::cout << std::endl;
 }
 
 void draw_triangle(objl::Vertex v1, objl::Vertex v2, objl::Vertex v3){
@@ -118,6 +153,11 @@ void draw_topos(){
 	glTranslatef(-2.0,0,2); draw_topo();
 }
 
+/*void draw_hands(){
+	(-17.9619, 54.2626, 62.3615);
+	(14.6468, 76.7065, 13.6628);
+}*/
+
 void draw_sceneMenu(){
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -140,22 +180,42 @@ void draw_sceneGame(){
 	draw_topos();
 }
 
+bool gameBackup;
+
+void idle(void){
+	if(gameBackup!=game){
+		draw_hands();
+		glutPostRedisplay();
+	}
+}
+
 void myDisplay() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	//dibujar escenario Menu o Game
-	draw_sceneMenu();
+	if(game){
+		draw_sceneGame();
+	} else {
+		draw_sceneMenu();
+	}
+	gameBackup=game;
 	glFlush();
 	glutSwapBuffers();
+	//if(gameBackup!=game)
+	//Delay(20);
+	//sleep(20);
+	//glutPostRedisplay();
 }
 
 int main(int argc, char **argv) {
+	controller.addListener(listener);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB|GLUT_DEPTH);
 	glutInitWindowSize(500, 500);
 	glutInitWindowPosition(0, 0);
-	glutCreateWindow("Bresenham's Line Drawing");
+	glutCreateWindow("Interacción Humano Computador");
 	myInit();
+	glutIdleFunc(idle);
 	glutDisplayFunc(myDisplay);
 	glutSpecialFunc(specialKeys);
 	glutMainLoop();
