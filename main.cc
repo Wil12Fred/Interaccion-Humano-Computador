@@ -11,19 +11,31 @@
 #endif
 #include "obj.h"
 bool game=false;
+bool newhand=false;
 #include "leapmotion.h"
+#include "listcube.h"
 
 double rotate_y=0; 
 double rotate_x=0;
 
-double topo_trans_x=-220;
-double topo_trans_y=-300;
-double topo_trans_z=-510;
-double topo_esc=200;
-double bottom_trans_x=-135;
-double bottom_trans_y=-520;
-double bottom_trans_z=-690;
-double bottom_esc=200;
+double hand_trans_z=-510;
+double hand_trans_y=-200;
+
+double topo_trans_x=-219;
+double topo_trans_y=-100;
+double topo_trans_z=-445;
+double topo_dif_x=119;
+double topo_dif_z=35;
+double topo_esc=58;
+double topo_cant=4;
+
+double bottom_trans_x=-185;
+double bottom_trans_y=-180;
+double bottom_trans_z=-500;
+double bottom_dif_x=135;
+double bottom_dif_z=75;
+double bottom_esc=80;
+double bottom_cant=3;
 
 SampleListener listener;
 Controller controller;
@@ -31,27 +43,23 @@ Controller controller;
 void myInit() {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	/*glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
+	//glEnable(GL_BLEND);glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glClearColor(0.0, 0.0, 0.0, 1.0);
+	/*if (argc > 1 && strcmp(argv[1], "--bg") == 0)
+		controller.setPolicy(Leap::Controller::POLICY_BACKGROUND_FRAMES);*/
 }
 
 void specialKeys( int key, int x, int y ) {
-	/*if (argc > 1 && strcmp(argv[1], "--bg") == 0)
-		controller.setPolicy(Leap::Controller::POLICY_BACKGROUND_FRAMES);*/
-	
 	//  Flecha derecha: aumentar rotación 5 grados
 	if (key == GLUT_KEY_RIGHT)
 		rotate_y -= 5;
 	//  Flecha izquierda: disminuir rotación 5 grados
 	else if (key == GLUT_KEY_LEFT)
 		rotate_y += 5;
- 
 	else if (key == GLUT_KEY_UP)
-		rotate_x -= 5;
- 
-	else if (key == GLUT_KEY_DOWN)
 		rotate_x += 5;
+	else if (key == GLUT_KEY_DOWN)
+		rotate_x -= 5;
 	//  Solicitar actualización de visualización
 	else if (key == GLUT_KEY_F1)
 		game=!game;
@@ -59,9 +67,9 @@ void specialKeys( int key, int x, int y ) {
  
 }
 
-void draw_pixel(int x, int y) {//Corregir
+void draw_pixel(objl::Vertex v){
 	glBegin(GL_POINTS);
-	glVertex2i(x, y);
+	glVertex3f(v.Position.X, v.Position.Y, v.Position.Z);
 	glEnd();
 }
 
@@ -73,122 +81,7 @@ void draw_line(objl::Vertex v1, objl::Vertex v2, double width=2.5) {//Corregir
 	glEnd();
 }
 
-//(-17.9619, 54.2626, 62.3615);
-//(14.6468, 76.7065, 13.6628);
-void draw_hands(){
-	//glRotatef(180,0.0,1.0,0.0);
-	glColor3f(1.0, 0.0, 0.0);
-	glLineWidth(2.5); 
-	glBegin(GL_LINES);
-		glVertex3f(-41.913,102.057,138.329);glVertex3f(-41.913,102.057,138.329);
-		glVertex3f(-41.913,102.057,138.329);glVertex3f(-15.3823,127.651,115.778);
-		glVertex3f(-15.3823,127.651,115.778);glVertex3f(-1.37188,144.293,95.827);
-		//
-		glVertex3f(-48.4583,121.36,135.954);glVertex3f(-32.3174,137.194,76.411);
-		glVertex3f(-32.3174,137.194,76.411);glVertex3f(-19.589,140.937,41.664);
-		glVertex3f(-19.589,140.937,41.664);glVertex3f(-12.9246,138.229,22.0143);
-		//
-		glVertex3f(-58.5077,123.748,133.319);glVertex3f(-51.3423,139.198,75.3696);
-		glVertex3f(-51.3423,139.198,75.3696);glVertex3f(-53.4176,161.515,40.1717);
-		glVertex3f(-53.4176,161.515,40.1717);glVertex3f(-54.0972,171.526,17.691);
-		//
-		glVertex3f(-68.9242,123.402,131.199);glVertex3f(-70.6707,137.229,78.7907);
-		glVertex3f(-70.6707,137.229,78.7907);glVertex3f(-78.777,158.395,47.4467); 
-		glVertex3f(-78.777,158.395,47.4467); glVertex3f(-83.4269,169.743,26.837);
-		//
-		glVertex3f(-79.1953,116.794,129.57);glVertex3f(-87.8555,131.213,82.272);
-		glVertex3f(-87.8555,131.213,82.272);glVertex3f(-103.359,147.81,61.7476);
-		glVertex3f(-103.359,147.81,61.7476);glVertex3f(-111.675,156.002,49.4818);
-	glEnd();
-	glColor3f(0.0, 1.0, 0.0);
-	glPointSize(2);
-	glBegin(GL_POINTS);
-		glVertex3f(-41.913,102.057,138.329);
-		glVertex3f(-41.913,102.057,138.329);
-		glVertex3f(-15.3823,127.651,115.778);
-		//
-		glVertex3f(-48.4583,121.36,135.954);
-		glVertex3f(-32.3174,137.194,76.411);
-		glVertex3f(-19.589,140.937,41.664);
-		//
-		glVertex3f(-58.5077,123.748,133.319);
-		glVertex3f(-51.3423,139.198,75.3696);
-		glVertex3f(-53.4176,161.515,40.1717);
-		//
-		glVertex3f(-68.9242,123.402,131.199);
-		glVertex3f(-70.6707,137.229,78.7907);
-		glVertex3f(-78.777,158.395,47.4467);
-		//
-		glVertex3f(-79.1953,116.794,129.57);
-		glVertex3f(-87.8555,131.213,82.272);
-		glVertex3f(-103.359,147.81,61.7476);
-	glEnd();
-	double trans_x;
-	double trans_y;
-	double trans_z;
-	double esc;
-	if(game){
-		trans_x=topo_trans_x;
-		trans_y=topo_trans_y;
-		trans_z=topo_trans_z;
-		esc=topo_esc;
-	} else {
-		trans_x=bottom_trans_x;
-		trans_y=bottom_trans_y;
-		trans_z=bottom_trans_z;
-		esc=bottom_esc;
-	}
-	glColor3f(0.0, 0.0, 1.0);
-	glBegin(GL_POLYGON);
-		glVertex3f(trans_x,trans_y,trans_z);
-		glVertex3f(trans_x+esc,trans_y,trans_z);
-		glVertex3f(trans_x+esc,trans_y+esc,trans_z);
-		glVertex3f(trans_x,trans_y+esc,trans_z);
-	glEnd();
-	glBegin(GL_POLYGON);
-		glVertex3f(trans_x,trans_y+esc,trans_z);
-		glVertex3f(trans_x,trans_y+esc,trans_z-esc);
-		glVertex3f(trans_x+esc,trans_y+esc,trans_z-esc);
-		glVertex3f(trans_x+esc,trans_y+esc,trans_z);
-	glEnd();
-	/*for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
-		const Hand hand = *hl;
-		const FingerList fingers = hand.fingers();
-		for (FingerList::const_iterator fl = fingers.begin(); fl != fingers.end(); ++fl) {
-			const Finger finger = *fl;
-			Bone::Type boneType = static_cast<Bone::Type>(3);
-			Vector boneEndPast=Vector(finger.bone(boneType).nextJoint().x,
-						finger.bone(boneType).nextJoint().y,
-						finger.bone(boneType).nextJoint().z);
-			for (int b = 2; b >-1; --b) { 
-				boneType = static_cast<Bone::Type>(b);
-				Bone bone = finger.bone(boneType);
-				Vector boneStart = bone.prevJoint();
-				Vector boneEnd = bone.nextJoint();
-				//std::cout << boneStart.x << " " << boneStart.y << " " << boneStart.z << std::endl; 
-				//std::cout << boneEnd.x << " " << boneEnd.y << " " << boneEnd.z << std::endl; 
-				glColor3f(1.0, 0.0, 0.0);
-				glBegin(GL_LINES);
-					glVertex3f(boneEndPast.x, boneEndPast.y, boneEndPast.z);
-					glVertex3f(boneEnd.x, boneEnd.y,boneEnd.z);
-				glEnd();
-				glColor3f(0.0, 1.0, 0.0);
-				glBegin(GL_POINTS);
-					glVertex3f(boneEnd.x,
-							boneEnd.y,
-							boneEnd.z);
-				glEnd();
-			}
-		}
-	}
-	//std::cout << std::endl;*/
-	//glRotatef(180,0.0,1.0,0.0);
-}
-
 void draw_triangle(objl::Vertex v1, objl::Vertex v2, objl::Vertex v3){
-	/*printf("(%.3f, %.3f, %.3f); ",v1.Position.X, v1.Position.Y, v1.Position.Z);
-	printf("(%.3f, %.3f, %.3f); ",v2.Position.X, v2.Position.Y, v2.Position.Z);
-	printf("(%.3f, %.3f, %.3f)\n",v3.Position.X, v3.Position.Y, v3.Position.Z);*/
 	glBegin(GL_TRIANGLES);
 		glVertex3f(v1.Position.X, v1.Position.Y, v1.Position.Z);
 		glVertex3f(v2.Position.X, v2.Position.Y, v2.Position.Z);
@@ -205,12 +98,96 @@ void draw_loadedMesh(objl::Loader& Loader,int i){
 	}
 }
 
+void Cube::draw(){
+	//glScalef(3,3,1.0);
+	glBegin(GL_POLYGON);
+		glVertex3f(trans_x,trans_y,trans_z);
+		glVertex3f(trans_x+esc,trans_y,trans_z);
+		glVertex3f(trans_x+esc,trans_y+esc,trans_z);
+		glVertex3f(trans_x,trans_y+esc,trans_z);
+	glEnd();
+	glBegin(GL_POLYGON);
+		glVertex3f(trans_x,trans_y+esc,trans_z);
+		glVertex3f(trans_x,trans_y+esc,trans_z-esc);
+		glVertex3f(trans_x+esc,trans_y+esc,trans_z-esc);
+		glVertex3f(trans_x+esc,trans_y+esc,trans_z);
+	glEnd();
+	//glScalef(1.0/3,1.0/3,1.0);
+}
+
+void ListCube::draw(){
+	for (int i=0;i<cubes.size();i++)
+		cubes[i].draw();
+}
+
+ListCube list_cube;
+
+std::vector<Vector> Articulation_Points;
+
+void draw_finger(Finger& finger){
+	double trans_z=hand_trans_z;
+	double trans_y=hand_trans_y;
+	Bone::Type boneType = static_cast<Bone::Type>(3);
+	Vector boneEndPast=Vector(finger.bone(boneType).nextJoint().x,
+				finger.bone(boneType).nextJoint().y,
+				finger.bone(boneType).nextJoint().z);
+	boneEndPast.z+=trans_z;
+	boneEndPast.y+=trans_y;
+	Articulation_Points.push_back(boneEndPast);
+	for (int b = 2; b >-1; --b) { 
+		boneType = static_cast<Bone::Type>(b);
+		Bone bone = finger.bone(boneType);
+		//Vector boneStart = bone.prevJoint();
+		Vector boneEnd = bone.nextJoint();
+		boneEnd.z+=trans_z;
+		boneEnd.y+=trans_y;
+		//std::cout << boneStart.x << " " << boneStart.y << " " << boneStart.z << std::endl; 
+		//std::cout << boneEnd.x << " " << boneEnd.y << " " << boneEnd.z << std::endl; 
+		glColor3f(1.0, 1.0, 0.0);
+		glBegin(GL_LINES);
+			glVertex3f(boneEndPast.x, boneEndPast.y, boneEndPast.z);
+			glVertex3f(boneEnd.x, boneEnd.y,boneEnd.z);
+		glEnd();
+		glColor3f(0.0, 1.0, 0.0);
+		glBegin(GL_POINTS);
+			glVertex3f(boneEnd.x,
+					boneEnd.y,
+					boneEnd.z);
+		glEnd();
+		boneEndPast=boneEnd;
+		Articulation_Points.push_back(boneEndPast);
+	}
+	//std::cout << std::endl;
+}
+
+void draw_hand(Hand& hand){
+	FingerList fingers = hand.fingers();
+	for (FingerList::const_iterator fl = fingers.begin(); fl != fingers.end(); ++fl) {
+		Finger finger = *fl;
+		draw_finger(finger);
+	}
+}
+
+void draw_hands(){
+	glLineWidth(2.5); 
+	glPointSize(2);
+	glScalef(3,3,1.0);
+	//glTranslatef(0,-250,0);
+	for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+		Hand hand = *hl;
+		//std::cout << std::string(hand.isLeft() ? "Left":"Right") << std::endl;
+		draw_hand(hand);
+	}
+	//glTranslatef(0,250,0);
+	glScalef(1.0/3,1.0/3,1.0);
+}
+
 objl::Loader BottomLoader;
 objl::Loader TopoLoader;
 bool isBottomLoaded=false;
 bool isTopoLoaded=false;
 
-void draw_bottom(){
+void draw_bottom(int i=-1){
 	if(!isBottomLoaded){
 		bool loadout = isBottomLoaded = BottomLoader.LoadFile("model.obj");
 		if(!loadout){
@@ -222,65 +199,100 @@ void draw_bottom(){
 	draw_loadedMesh(BottomLoader,2);
 	glColor3f(0.0, 0.0, 1.0);
 	draw_loadedMesh(BottomLoader,3);
+	if(i==1 && list_cube.cubes[list_cube.size()-1-i].intersected){
+		game=true;
+	}
 }
 
-void draw_topo(){
+bool draw_topo(int i=-1){
 	if(!isTopoLoaded){
 		bool loadout = isTopoLoaded = TopoLoader.LoadFile("Topoo.obj");
 		if(!loadout){
 			printf("Error\n");
-			return;
+			return false;
 		}
 	}
-	draw_loadedMesh(TopoLoader,0);
+	if(i==-1){
+		glColor3f(1.0,0.0,0.0);
+		draw_loadedMesh(TopoLoader,0);
+		return true;
+	} else {
+		if(!list_cube.cubes[list_cube.size()-1-i].intersected){
+			glColor3f(1.0,0.0,0.0);
+			draw_loadedMesh(TopoLoader,0);
+			return true;
+		} else {
+			//glColor3f(1.0,0.0,1.0);
+			//draw_loadedMesh(TopoLoader,0);
+		}
+	}
 }
 
 void draw_bottoms(){
-	//glTranslatef(0,-200,-100);
-	draw_bottom();
-	glTranslatef(-150,0,-50);
-	draw_bottom();
-	glTranslatef(-150,0,50);
-	draw_bottom();
+	glTranslatef(0,0,-25);
+	draw_bottom(0);
+	glTranslatef(-150,0,-25);
+	draw_bottom(1);
+	glTranslatef(-150,0,25);
+	draw_bottom(2);
+	glTranslatef(300,0,25);
 }
 
-void draw_topos(){
-	glColor3f(1.0,0.0,0.0);
-	glTranslatef(2.9,0,0); draw_topo();
-	glTranslatef(-2.0,0,-2); draw_topo();
-	glTranslatef(-2.0,0,0); draw_topo();
-	glTranslatef(-2.0,0,2); draw_topo();
+bool draw_topos(){
+	bool existTopos=false;
+	glTranslatef(4.5,0,-1.25); existTopos=draw_topo(0) || existTopos;
+	glTranslatef(-3.2,0,-0.25); existTopos=draw_topo(1) || existTopos;
+	glTranslatef(-3.2,0,0); existTopos=draw_topo(2) || existTopos;
+	if(!existTopos){
+		std::cout << "pase\n";
+	}
+	glTranslatef(-3.2,0,0.25); existTopos=draw_topo(3) || existTopos;
+	glTranslatef(-4.5+3.2*3,0,1.25);
+	return existTopos;
 }
 
 void draw_sceneMenu(){
-	/*glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(120,1.0,1,500);
-	glMatrixMode(GL_MODELVIEW);*/
-	//glRotatef(rotate_x,1.0,0.0,0.0);
-	//glRotatef(rotate_y,0.0,1.0,0.0);
-	glTranslatef(0,-500,-150);
+	list_cube.set(bottom_trans_x,
+			bottom_trans_y,
+			bottom_trans_z,
+			bottom_esc,
+			bottom_dif_x,
+			bottom_dif_z,
+			bottom_cant);
+	glTranslatef(0,-500,5);
 	glScalef(3,3,3);
+	list_cube.check_intersection(Articulation_Points);
 	draw_bottoms();
-}
-
-void draw_sceneGame(){
-	/*glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(60,1.0,0.1,20.0);
-	glMatrixMode(GL_MODELVIEW);*/
-	//glRotatef(rotate_x,1.0,0.0,0.0);
-	//glRotatef(rotate_y,0.0,1.0,0.0);
-	glTranslatef(0,-300,-350);
-	glScalef(120,120,120);
-	draw_topos();
+	glScalef(1.0/3,1.0/3,1.0/3);
+	glTranslatef(0,500,-5);
 }
 
 bool gameBackup;
 
-void idle(void){
+void draw_sceneGame(){
 	if(gameBackup!=game){
-		//draw_hands();
+		list_cube.set(topo_trans_x,
+				topo_trans_y,
+				topo_trans_z,
+				topo_esc,
+				topo_dif_x,
+				topo_dif_z,
+				topo_cant);
+	}
+	glTranslatef(0,-300,-350);
+	glScalef(120,120,120);
+	//std::cout << Articulation_Points.size() << std::endl;
+	list_cube.check_intersection(Articulation_Points);
+	if(!draw_topos()){
+		game=false;
+	}
+	glScalef(1.0/120,1.0/120,1.0/120);
+	glTranslatef(0,300,350);
+}
+
+void idle(void){
+	if(gameBackup!=game || newhand){
+		newhand=false;
 		glutPostRedisplay();
 	}
 }
@@ -290,29 +302,25 @@ void loadCamera(){
 	glLoadIdentity();
 	gluPerspective(100,1.0,1,2000);
 	glMatrixMode(GL_MODELVIEW);
-}
-
-void draw_sceneHands(){
-	glRotatef(rotate_x,1.0,0.0,0.0);
-	glRotatef(rotate_y,0.0,1.0,0.0);
-	glTranslatef(0,-100,-200);
-	draw_hands();
+	glTranslatef(0,-100,0);
 }
 
 void myDisplay() {
+	Articulation_Points.clear();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	//dibujar escenario Menu o Game
 	loadCamera();
+	glRotatef(rotate_x,1.0,0.0,0.0);
+	glRotatef(rotate_y,0.0,1.0,0.0);
+	glTranslatef(0,-100,-200);
+	draw_hands();
 	if(game){
-		draw_sceneHands();
 		draw_sceneGame();
-		
 	} else {
-		draw_sceneHands();
-		//draw_sceneGame();
 		draw_sceneMenu();
 	}
+	//glColor3f(0.0,0.0,1.0);list_cube.draw();
 	gameBackup=game;
 	glFlush();
 	glutSwapBuffers();

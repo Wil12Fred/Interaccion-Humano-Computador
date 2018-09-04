@@ -57,7 +57,9 @@ void SampleListener::onFrame(const Controller& controller) {
             << ", gestures: " << frame.gestures().count() << std::endl;*/
 
   hands = frame.hands();
+  bool existHand=false;
   for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+    existHand=true;
     // Get the first hand
     const Hand hand = *hl;
     std::string handType = hand.isLeft() ? "Left hand" : "Right hand";
@@ -107,7 +109,7 @@ void SampleListener::onFrame(const Controller& controller) {
               << ", position: " << tool.tipPosition()
               << ", direction: " << tool.direction() << std::endl;*/
   }
-
+  newhand=existHand;
   // Get gestures
   const GestureList gestures = frame.gestures();
   for (int g = 0; g < gestures.count(); ++g) {
@@ -152,7 +154,7 @@ void SampleListener::onFrame(const Controller& controller) {
       }
       case Gesture::TYPE_KEY_TAP:
       {
-	game=!game;
+	//game=!game;
         KeyTapGesture tap = gesture;
         /*std::cout << std::string(2, ' ')
           << "Key Tap id: " << gesture.id()
