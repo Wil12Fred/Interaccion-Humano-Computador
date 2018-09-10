@@ -1,0 +1,20 @@
+# Material file for montymole.obj
+
+newmtl montymole_t0099_0.png
+	Ns 0
+	d 1
+	illum 2
+	Kd 1.0 1.0 1.0
+	Ks 0.0 0.0 0.0
+	Ka 0.0 0.0 0.0
+	map_Kd t0099_0.png
+
+newmtl whisker_t0100_0.png
+	Ns 0
+	d 1
+	illum 2
+	Kd 1.0 1.0 1.0
+	Ks 0.0 0.0 0.0
+	Ka 0.0 0.0 0.0
+	map_Kd t0100_0.png
+
