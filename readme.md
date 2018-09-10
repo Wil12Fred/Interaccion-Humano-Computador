@@ -1,7 +1,7 @@
-Compilación para el sistema operativo OS X
 Requisitos:
 - Framework OpenGL, GLUT
 - Libería SDK Leap Motion (../lib/libLeap.dylib)
+- Sistema Operativo macOS.
 
 Compilación:
 - c++ -o main main.cc -I../include -L/System/Library/Frameworks -framework GLUT -framework OpenGL ../lib/libLeap.dylib /usr/local/lib/libpng.dylib
