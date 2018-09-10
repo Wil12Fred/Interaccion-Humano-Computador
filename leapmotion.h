@@ -4,6 +4,7 @@
 using namespace Leap;
 
 HandList hands;
+bool NEWHAND=false;
 
 class SampleListener : public Listener {
   public:
@@ -109,7 +110,7 @@ void SampleListener::onFrame(const Controller& controller) {
               << ", position: " << tool.tipPosition()
               << ", direction: " << tool.direction() << std::endl;*/
   }
-  newhand=existHand;
+  NEWHAND=existHand;
   // Get gestures
   const GestureList gestures = frame.gestures();
   for (int g = 0; g < gestures.count(); ++g) {
