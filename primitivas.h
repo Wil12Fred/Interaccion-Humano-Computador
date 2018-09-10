@@ -1,6 +1,12 @@
 #define eps 1e-9
 #define pi acos(-1)
 
+void draw_pixel(objl::Vector3 v){
+	glBegin(GL_POINTS);
+	glVertex3f(v.X, v.Y, v.Z);
+	glEnd();
+}
+
 void draw_pixel(objl::Vertex v){
 	glBegin(GL_POINTS);
 	glVertex3f(v.Position.X, v.Position.Y, v.Position.Z);

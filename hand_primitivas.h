@@ -11,11 +11,7 @@ void draw_finger(Finger& finger){
                 glColor3f(1.0, 1.0, 0.0);
 		draw_line(getPos(objl::Vector3(boneEndPast.x, boneEndPast.y,boneEndPast.z)), getPos(objl::Vector3(boneEnd.x,boneEnd.y,boneEnd.z)));
                 glColor3f(0.0, 1.0, 0.0);
-                glBegin(GL_POINTS);
-                        glVertex3f(boneEnd.x,
-                                        boneEnd.y,
-                                        boneEnd.z);
-                glEnd();
+		draw_pixel(getPos(objl::Vector3(boneEnd.x,boneEnd.y,boneEnd.z)));
                 boneEndPast=boneEnd;
         }   
         //std::cout << std::endl;

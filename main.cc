@@ -176,7 +176,7 @@ void draw_bottoms(){
 	for (int i=0;i<Bottoms.size();i++){
 		Bottoms[i].draw();
 	}
-	if(Bottoms[1].intersected && Bottoms[1].maxY<=0){
+	if(Bottoms[1].intersected && Bottoms[1].maxY<=50){
 		game=!game;
 	}
 }
@@ -205,7 +205,7 @@ void draw_sceneGame(){
 	for (int i=0;i<Topos.size();i++){
 		Topos[i].intersecta(Articulation_Points);
 		if(Topos[i].intersected){
-			if (Topos[i].maxY<=0){ 	
+			if (Topos[i].maxY<=50){ 	
 				Topos[i].invisible=true;
 			}
 		}
@@ -257,8 +257,8 @@ void myDisplay(){
 	}
 	//glDisable(GL_DEPTH_TEST);
 	Cube baseC(Camara.X-400,0,Camara.Z+400,800);
-	Cube leftC(Camara.X-800,0,0,400);
-	Cube rightC(Camara.X+400,0,0,400);
+	Cube leftC(Camara.X-600,0,0,400);
+	Cube rightC(Camara.X+200,0,0,400);
 
 	glColor4f(0,0,0,0.2);
 	baseC.draw2();
