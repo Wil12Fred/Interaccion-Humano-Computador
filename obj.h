@@ -1,20 +1,14 @@
 #pragma once
-
 // Iostream - STD I/O Library
 #include <iostream>
-
 // Vector - STD Vector/Array Library
 #include <vector>
-
 // String - STD String Library
 #include <string>
-
 // fStream - STD File I/O Library
 #include <fstream>
-
 // Math.h - STD math Library
 #include <math.h>
-
 // Print progress to console while loading (large models)
 #define OBJL_CONSOLE_OUTPUT
 
@@ -121,7 +115,14 @@ namespace objl
 		{
 			return Vector3(this->X / other, this->Y / other, this->Z / other);
 		}
-
+		Vector3 min(const Vector3& right) const
+		{
+			return Vector3(std::min(this->X, right.X), std::min(this->Y,right.Y), std::min(this->Z, right.Z));
+		}
+		Vector3 max(const Vector3& right) const
+		{
+			return Vector3(std::max(this->X, right.X), std::max(this->Y,right.Y), std::max(this->Z, right.Z));
+		}
 		// Positional Variables
 		float X;
 		float Y;
@@ -148,7 +149,7 @@ namespace objl
 	{
 		Material()
 		{
-			name;
+			name="";
 			Ns = 0.0f;
 			Ni = 0.0f;
 			d = 0.0f;
@@ -208,8 +209,8 @@ namespace objl
 		std::vector<Vertex> Vertices;
 		// Index List
 		std::vector<unsigned int> Indices;
-
 		// Material
+		Vector3 defaultColor;
 		Material MeshMaterial;
 	};
 
@@ -469,13 +470,13 @@ namespace objl
 				{
 					if (!meshname.empty())
 					{
-						std::cout
+						/*std::cout
 							<< "\r- " << meshname
 							<< "\t| vertices > " << Positions.size()
 							<< "\t| texcoords > " << TCoords.size()
 							<< "\t| normals > " << Normals.size()
 							<< "\t| triangles > " << (Vertices.size() / 3)
-							<< (!MeshMatNames.empty() ? "\t| material: " + MeshMatNames.back() : "");
+							<< (!MeshMatNames.empty() ? "\t| material: " + MeshMatNames.back() : "");*/
 					}
 				}
 				#endif
@@ -529,7 +530,7 @@ namespace objl
 						}
 					}
 					#ifdef OBJL_CONSOLE_OUTPUT
-					std::cout << std::endl;
+					//std::cout << std::endl;
 					outputIndicator = 0;
 					#endif
 				}
@@ -657,7 +658,7 @@ namespace objl
 					pathtomat += algorithm::tail(curline);
 
 					#ifdef OBJL_CONSOLE_OUTPUT
-					std::cout << std::endl << "- find materials in: " << pathtomat << std::endl;
+					//std::cout << std::endl << "- find materials in: " << pathtomat << std::endl;
 					#endif
 
 					// Load Materials
@@ -666,7 +667,7 @@ namespace objl
 			}
 
 			#ifdef OBJL_CONSOLE_OUTPUT
-			std::cout << std::endl;
+			//std::cout << std::endl;
 			#endif
 
 			// Deal with last mesh
