@@ -34,59 +34,73 @@ Controller controller;
 Model* Bottom;
 Model* Topo;
 
-void myInit() {
-	/*if (argc > 1 && strcmp(argv[1], "--bg") == 0)
-		controller.setPolicy(Leap::Controller::POLICY_BACKGROUND_FRAMES);*/
-	Bottom=new Model("model.obj",2);
-	Topo=new Model("Topoo.obj",120);
+void initQuadric(){
 	qobj = gluNewQuadric();
 	gluQuadricNormals(qobj, GLU_SMOOTH);
+}
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(0.2, 0.2, 0.1, 0.5);
-
-	Bottom->setToCenter(615-900, -70, 390-25);
-	Bottom->addMesh(2);Bottom->addColor(2,1.0,0.0,0.0);
-	Bottom->addMesh(3);Bottom->addColor(3,0.0,0.0,1.0);
-	Bottom->useColor=true;
-	Bottom->solid();
-
+void initTopo(){
+	Topo=new Model("Topoo.obj",120);
 	Topo->setToCenter(0, -70, -15);
 	Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
 	Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
 	Topo->useColor=true;
 	Topo->solid();
+}
 
+void initBottom(){
+	Bottom=new Model("model.obj",2);
+	Bottom->setToCenter(615-900, -70, 390-25);
+	Bottom->addMesh(2);Bottom->addColor(2,1.0,0.0,0.0);
+	Bottom->addMesh(3);Bottom->addColor(3,0.0,0.0,1.0);
+	Bottom->useColor=true;
+	Bottom->solid();
+}
+
+void initVariables(){
+	initQuadric();
+	initTopo();
+	initBottom();
 	gameBackup=true;
 }
 
-void specialKeys( int key, int x, int y ) {
-	//  Flecha derecha: aumentar rotación 5 grados
-	if (key == GLUT_KEY_RIGHT)
+void initGlVariables(){
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glClearColor(0.2, 0.2, 0.1, 0.5);
+}
+
+void myInit() {
+	/*if (argc > 1 && strcmp(argv[1], "--bg") == 0)
+		controller.setPolicy(Leap::Controller::POLICY_BACKGROUND_FRAMES);*/
+	initGlVariables();
+	initVariables();
+}
+
+void specialKeys(int key, int x, int y){
+	if (key == GLUT_KEY_RIGHT){
 		rotate_y -= 5;
-	//  Flecha izquierda: disminuir rotación 5 grados
-	else if (key == GLUT_KEY_LEFT)
+	} else if (key == GLUT_KEY_LEFT){
 		rotate_y += 5;
-	else if (key == GLUT_KEY_UP)
+	} else if (key == GLUT_KEY_UP){
 		rotate_x += 5;
-	else if (key == GLUT_KEY_DOWN)
+	} else if (key == GLUT_KEY_DOWN){
 		rotate_x -= 5;
 	//  Solicitar actualización de visualización
-	else if (key == GLUT_KEY_F1){
+	} else if (key == GLUT_KEY_F1){
 		game=!game;
 		return;
-	} else if (key == GLUT_KEY_F2)
+	} else if (key == GLUT_KEY_F2){
 		rotate_z-=5;
-	else if (key == GLUT_KEY_F3)
+	} else if (key == GLUT_KEY_F3){
 		rotate_z+=5;
+	}
 	glutPostRedisplay();
 }
 
 std::vector<objl::Vector3> Articulation_Points;
-objl::Loader TopoLoader, BottomLoader;
 std::vector<Objeto> Topos, Bottoms;
 
 void createBottoms(){
@@ -175,7 +189,7 @@ void loadCamera(){
 	glTranslatef(0,0,-250);
 }
 
-void myDisplay() {
+void myDisplay(){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_BLENT_BUFFER_BIT);
 	glLoadIdentity();
 	//dibujar escenario Menu o Game
@@ -207,7 +221,7 @@ void myDisplay() {
 	glutSwapBuffers();
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv){
 	controller.addListener(listener);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB|GLUT_DEPTH);
