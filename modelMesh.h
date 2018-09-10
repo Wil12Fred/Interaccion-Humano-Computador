@@ -139,6 +139,23 @@ struct Model{
 		}
 	}
 
+	void moveToCenter(){
+		if(hasLimits){
+			toCenter=objl::Vector3(-(max.X+min.X)/2,
+						-(max.Y+min.Y)/2,
+						-(max.Z+min.Z)/2);
+			for (int i=0;i<formatObj.LoadedMeshes.size();i++){
+				objl::Mesh* curMesh=&formatObj.LoadedMeshes[i];
+				for (int j=0;j<curMesh->Vertices.size();j++){
+					objl::Vertex* curVertex=&(curMesh->Vertices[j]);
+					curVertex->Position=(curVertex->Position)+toCenter;
+				}
+			}
+			max=max+toCenter;
+			min=min+toCenter;
+		}
+	}
+
 	void draw(){
 		if(!isLoaded){
 			bool loadout = isLoaded = formatObj.LoadFile(fileObj);

@@ -14,6 +14,13 @@ struct Objeto{
 		intersected=false;
 		invisible=false;
 	}
+	Objeto(Model* m, objl::Vector3 Mov){
+		model=m;
+		Movimiento=Mov;
+		useColor=false;
+		intersected=false;
+		invisible=false;
+	}
 	Objeto(Model* m,double X,double Y,double Z){
 		model=m;
 		Movimiento=objl::Vector3(X,Y,Z);

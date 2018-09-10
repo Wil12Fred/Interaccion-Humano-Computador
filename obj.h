@@ -110,6 +110,11 @@ namespace objl
 		{
 			return Vector3(this->X * other, this->Y * other, this->Z * other);
 		}
+		// Float Multiplication Operator Overload
+		double operator*(const Vector3& other) const
+		{
+			return (double(this->X) * other.X+ double(this->Y) * other.Y+ double(this->Z) * other.Z);
+		}
 		// Float Division Operator Overload
 		Vector3 operator/(const float& other) const
 		{
@@ -122,6 +127,10 @@ namespace objl
 		Vector3 max(const Vector3& right) const
 		{
 			return Vector3(std::max(this->X, right.X), std::max(this->Y,right.Y), std::max(this->Z, right.Z));
+		}
+		double norm() const
+		{
+			return sqrt((*this)*(*this));
 		}
 		// Positional Variables
 		float X;

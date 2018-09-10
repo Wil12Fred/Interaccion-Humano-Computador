@@ -1,6 +1,17 @@
+#define eps 1e-9
+#define pi acos(-1)
+
 void draw_pixel(objl::Vertex v){
 	glBegin(GL_POINTS);
 	glVertex3f(v.Position.X, v.Position.Y, v.Position.Z);
+	glEnd();
+}
+
+void draw_line(objl::Vector3 v1, objl::Vector3 v2, double width=2.5) {
+	glLineWidth(width); 
+	glBegin(GL_LINES);
+		glVertex3f(v1.X, v1.Y, v1.Z);
+		glVertex3f(v2.X, v2.Y, v2.Z);
 	glEnd();
 }
 
@@ -9,6 +20,14 @@ void draw_line(objl::Vertex v1, objl::Vertex v2, double width=2.5) {
 	glBegin(GL_LINES);
 		glVertex3f(v1.Position.X, v1.Position.Y, v1.Position.Z);
 		glVertex3f(v2.Position.X, v2.Position.Y, v2.Position.Z);
+	glEnd();
+}
+
+void draw_triangle(objl::Vector3 v1, objl::Vector3 v2, objl::Vector3 v3){
+	glBegin(GL_TRIANGLES);
+		glVertex3f(v1.X, v1.Y, v1.Z);
+		glVertex3f(v2.X, v2.Y, v2.Z);
+		glVertex3f(v3.X, v3.Y, v3.Z);
 	glEnd();
 }
 
@@ -47,25 +66,3 @@ void draw_loadedMesh(objl::Loader& Loader,int i){
 			glDisable(GL_TEXTURE_2D);
 	}
 }
-
-void Cube::draw(){
-        glBegin(GL_POLYGON);
-                glVertex3f(trans_x,trans_y,trans_z);
-                glVertex3f(trans_x+esc,trans_y,trans_z);
-                glVertex3f(trans_x+esc,trans_y,trans_z-esc);
-                glVertex3f(trans_x,trans_y,trans_z-esc);
-        glEnd();
-        glBegin(GL_POLYGON);
-                glVertex3f(trans_x,trans_y,trans_z-esc);
-                glVertex3f(trans_x+esc,trans_y,trans_z-esc);
-                glVertex3f(trans_x+esc,trans_y+esc,trans_z-esc);
-                glVertex3f(trans_x,trans_y+esc,trans_z-esc);
-        glEnd();
-}
-
-void ListCube::draw(){
-        for (int i=0;i<cubes.size();i++)
-                cubes[i].draw();
-}
-
-ListCube list_cube;

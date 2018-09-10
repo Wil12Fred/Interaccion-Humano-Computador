@@ -11,8 +11,8 @@ struct Cube{
 		esc=e;
 		intersected=false;
 	}
-	bool check_intersection(Vector& vertex){
-		double x=vertex.x,y=vertex.y,z=vertex.z;
+	bool check_intersection(objl::Vector3& vertex){
+		double x=vertex.X,y=vertex.Y,z=vertex.Z;
 		if(!(x>trans_x && x<trans_x+esc)){
 			return false;
 		}
@@ -24,12 +24,13 @@ struct Cube{
 		}
 		return true;
 	}
-	bool check_intersection(std::vector<Vector>& vertexs){
+	bool check_intersection(std::vector<objl::Vector3>& vertexs){
 		for (int i=0;i<vertexs.size();i++)
 			intersected=(intersected || check_intersection(vertexs[i]));
 		return intersected;
 	}
-	void draw();
+	void draw(int cara);
+	void draw2(int cara);
 };
 
 struct ListCube{
@@ -68,9 +69,9 @@ struct ListCube{
 	void clear(){
 		cubes.clear();
 	}
-	bool check_intersection(std::vector<Vector>& vertexs){
+	bool check_intersection(std::vector<objl::Vector3>& vertexs){
 		for (int i=0;i<cubes.size();i++){
-			intersection= cubes[i].check_intersection(vertexs) || intersection;
+			intersection= intersection || cubes[i].check_intersection(vertexs);
 		}
 		return intersection;
 	}

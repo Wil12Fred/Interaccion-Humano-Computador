@@ -18,21 +18,59 @@
 #include "primitivas.h"
 #include "objetoModel.h"
 
+objl::Vector3 getCircleCoordinate(objl::Vector3 Center, double r, double angle){
+	Center.X+=sin((angle*pi)/180)*r;
+	Center.Z-=cos((angle*pi)/180)*r;
+	return Center;
+}
+
+objl::Vector3 getCircleCoordinate(objl::Vector3 Center, objl::Vector3 point, double r, double angle){
+	objl::Vector3 dif=point-Center;
+	angle+=(asin(dif.X/r)*180)/pi;
+	Center.X+=sin((angle*pi)/180)*r;
+	Center.Z-=cos((angle*pi)/180)*r;
+	return Center;
+}
+
 double rotate_x=0;
 double rotate_y=0; 
 double rotate_z=0;
+double rotate_c=0;
 GLUquadric* qobj;
 
-#include "hand_primitivas.h"
 
 bool game=false;
 bool gameBackup;
+bool inmove=false;
 
 SampleListener listener;
 Controller controller;
 
 Model* Bottom;
 Model* Topo;
+
+objl::Vector3 Camara;
+double ratio=250;
+
+objl::Vector3 getLookAt(){
+	return getCircleCoordinate(objl::Vector3(Camara.X,Camara.Y/2,Camara.Z),
+					ratio,rotate_c);
+}
+
+objl::Vector3 getPos(objl::Vector3 point){
+	objl::Vector3 Center=Camara;
+	Center.Y=point.Y;
+	double r=(point-Center).norm();
+	return getCircleCoordinate(Center, point,
+					r,rotate_c);
+}
+
+objl::Vector3 getPos(double x, double y, double z){
+	objl::Vector3 point(x,y,z);
+	return getPos(point);
+}
+
+#include "hand_primitivas.h"
 
 void initQuadric(){
 	qobj = gluNewQuadric();
@@ -41,18 +79,20 @@ void initQuadric(){
 
 void initTopo(){
 	Topo=new Model("Topoo.obj",120);
-	Topo->setToCenter(0, -70, -15);
+	//Topo->setToCenter(0, -70, -15);
 	Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
 	Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
+	Topo->moveToCenter();
 	Topo->useColor=true;
 	Topo->solid();
 }
 
 void initBottom(){
-	Bottom=new Model("model.obj",2);
-	Bottom->setToCenter(615-900, -70, 390-25);
+	Bottom=new Model("model.obj",1.5);
+	//Bottom->setToCenter(615-900, -70, 390-25);
 	Bottom->addMesh(2);Bottom->addColor(2,1.0,0.0,0.0);
 	Bottom->addMesh(3);Bottom->addColor(3,0.0,0.0,1.0);
+	Bottom->moveToCenter();
 	Bottom->useColor=true;
 	Bottom->solid();
 }
@@ -62,6 +102,7 @@ void initVariables(){
 	initTopo();
 	initBottom();
 	gameBackup=true;
+	Camara=objl::Vector3(0,300,250);
 }
 
 void initGlVariables(){
@@ -69,7 +110,7 @@ void initGlVariables(){
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(0.2, 0.2, 0.1, 0.5);
+	glClearColor(0.3, 0.8, 0.8, 0.5);
 }
 
 void myInit() {
@@ -88,14 +129,17 @@ void specialKeys(int key, int x, int y){
 		rotate_x += 5;
 	} else if (key == GLUT_KEY_DOWN){
 		rotate_x -= 5;
-	//  Solicitar actualización de visualización
-	} else if (key == GLUT_KEY_F1){
+	} else if (key == GLUT_KEY_F1){//  Solicitar actualización de visualización
 		game=!game;
 		return;
 	} else if (key == GLUT_KEY_F2){
 		rotate_z-=5;
 	} else if (key == GLUT_KEY_F3){
 		rotate_z+=5;
+	} else if (key == GLUT_KEY_F4){
+		rotate_c-=5;
+	} else if (key == GLUT_KEY_F5){
+		rotate_c+=5;
 	}
 	glutPostRedisplay();
 }
@@ -105,10 +149,27 @@ std::vector<Objeto> Topos, Bottoms;
 
 void createBottoms(){
 	Bottoms.clear();
-	double x,y,z;
-	Bottoms.push_back(Objeto(Bottom,x=-250,y=0,z=0));
-	Bottoms.push_back(Objeto(Bottom,x+=250,y=0,z-=15));
-	Bottoms.push_back(Objeto(Bottom,x+=250,y=0,z+=15));
+	objl::Vector3 Center=Camara, Position;
+	Center.Y=0;
+	double angle=45;
+	double beg=-45;
+	for (int i=0;i<3;i++){
+		Position=getCircleCoordinate(Center,350,beg+i*angle);
+		Bottoms.push_back(Objeto(Bottom,Position));
+	}
+}
+
+void createTopos(){
+	int n_topos=4;
+	double angle=360/(3*(n_topos-1));
+	Topos.clear();
+	objl::Vector3 Center=Camara, Position;
+	Center.Y=0;
+	double beg=-60;
+	for (int i=0;i<4;i++){
+		Position=getCircleCoordinate(Center,350,beg+i*angle);
+		Topos.push_back(Objeto(Topo,Position));
+	}
 }
 
 void draw_bottoms(){
@@ -118,15 +179,6 @@ void draw_bottoms(){
 	if(Bottoms[1].intersected && Bottoms[1].maxY<=0){
 		game=!game;
 	}
-}
-
-void createTopos(){
-	Topos.clear();
-	double x,y,z;
-	Topos.push_back(Objeto(Topo,x=-420,y=0,z=30));
-	Topos.push_back(Objeto(Topo,x+=280,y=0,z-=25));
-	Topos.push_back(Objeto(Topo,x+=280,y=0,z-=25));
-	Topos.push_back(Objeto(Topo,x+=280,y=0,z+=25));
 }
 
 bool draw_topos(){
@@ -143,9 +195,7 @@ bool draw_topos(){
 void draw_sceneMenu(){
 	getArticulationPoints(Articulation_Points);
 	for (int i=0;i<Bottoms.size();i++){
-		//if(!Bottoms[i].intersected){
-			Bottoms[i].intersecta(Articulation_Points);
-		//}
+		Bottoms[i].intersecta(Articulation_Points);
 	}
 	draw_bottoms();
 }
@@ -166,7 +216,7 @@ void draw_sceneGame(){
 }
 
 void idle(void){
-	if(gameBackup!=game || NEWHAND){
+	if(gameBackup!=game || NEWHAND || inmove){
 		NEWHAND=false;
 		glutPostRedisplay();
 	}
@@ -176,20 +226,15 @@ void loadCamera(){
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(130,1.0,1,2000);
-	gluLookAt(0, 200, 0, 
-			0.0, 100.0, -300.0,
-			 0, 1, 0);
+	objl::Vector3 lookAt=getLookAt();
+	gluLookAt(Camara.X, Camara.Y, Camara.Z,  //<-- Camara coordinates
+			lookAt.X, lookAt.Y, lookAt.Z, //<-- Look at coordinates
+			0, 1, 0);
 	glMatrixMode(GL_MODELVIEW);
-	/*glTranslatef(0,0,-100);
-	glBegin(GL_LINES);
-	glColor3f(0.0,1.0,100);
-		glVertex3f(-30,0,-30);glVertex3f(30,0,30);
-		glVertex3f(-30,0,30);glVertex3f(30,0,-30);
-	glEnd();*/
-	glTranslatef(0,0,-250);
 }
 
 void myDisplay(){
+	inmove=false;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_BLENT_BUFFER_BIT);
 	glLoadIdentity();
 	//dibujar escenario Menu o Game
@@ -211,10 +256,30 @@ void myDisplay(){
 		draw_sceneMenu();
 	}
 	//glDisable(GL_DEPTH_TEST);
-	glTranslatef(0,0,250);
-	Cube base(-400,0,245,800);
-	glColor4f(1,1,1,0.2);
-	base.draw();
+	Cube baseC(Camara.X-400,0,Camara.Z+400,800);
+	Cube leftC(Camara.X-800,0,0,400);
+	Cube rightC(Camara.X+400,0,0,400);
+
+	glColor4f(0,0,0,0.2);
+	baseC.draw2();
+	std::vector<objl::Vector3> HandPoints;
+	getLeapArticulationPoints(HandPoints);
+	if(leftC.check_intersection(HandPoints)){
+		inmove=true;
+		rotate_c-=5;
+		glColor4f(1.0,0.1,0.1,0.6);
+	} else {
+		glColor4f(0.2,0.0,0.0,0.6);
+	}
+	leftC.draw(3);
+	if(rightC.check_intersection(HandPoints)){
+		inmove=true;
+		rotate_c+=5;
+		glColor4f(1.0,0.1,0.1,0.6);
+	} else {
+		glColor4f(0.2,0.0,0.0,0.6);
+	}
+	rightC.draw(2);
 	//glDisable(GL_BLEND);
 	//glEnable(GL_DEPTH_TEST);
 	glFlush();
