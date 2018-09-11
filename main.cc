@@ -38,7 +38,6 @@ double rotate_z=0;
 double rotate_c=0;
 GLUquadric* qobj;
 
-
 bool game=false;
 bool gameBackup;
 bool inmove=false;
@@ -150,7 +149,7 @@ std::vector<Objeto> Topos, Bottoms;
 void createBottoms(){
 	Bottoms.clear();
 	objl::Vector3 Center=Camara, Position;
-	Center.Y=0;
+	Center.Y/=6;
 	double angle=45;
 	double beg=-45;
 	for (int i=0;i<3;i++){
@@ -161,13 +160,26 @@ void createBottoms(){
 
 void createTopos(){
 	int n_topos=4;
-	double angle=360/(3*(n_topos-1));
+	int scens=6;
+	double angle;
+	if(n_topos>1){
+		angle = 360.0/(scens*(n_topos-1));
+	} else {
+		angle = 0;
+	}
 	Topos.clear();
 	objl::Vector3 Center=Camara, Position;
-	Center.Y=0;
-	double beg=-60;
-	for (int i=0;i<4;i++){
-		Position=getCircleCoordinate(Center,350,beg+i*angle);
+	Center.Y/=6;
+	double amp=400;
+	Center.Z+=amp;
+	double begin;
+	if(n_topos>1){
+		begin=-(360.0/(scens*2));
+	} else {
+		begin=0;
+	}
+	for (int i=0;i<n_topos;i++){
+		Position=getCircleCoordinate(Center,Center.Z,begin+i*angle);
 		Topos.push_back(Objeto(Topo,Position));
 	}
 }
@@ -176,7 +188,7 @@ void draw_bottoms(){
 	for (int i=0;i<Bottoms.size();i++){
 		Bottoms[i].draw();
 	}
-	if(Bottoms[1].intersected && Bottoms[1].maxY<=50){
+	if(Bottoms[1].intersected && Bottoms[1].maxY<=0){
 		game=!game;
 	}
 }
@@ -205,7 +217,7 @@ void draw_sceneGame(){
 	for (int i=0;i<Topos.size();i++){
 		Topos[i].intersecta(Articulation_Points);
 		if(Topos[i].intersected){
-			if (Topos[i].maxY<=50){ 	
+			if (Topos[i].maxY<=0){ 	
 				Topos[i].invisible=true;
 			}
 		}
@@ -225,12 +237,38 @@ void idle(void){
 void loadCamera(){
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(130,1.0,1,2000);
+	gluPerspective(130,1.0,100,2000);
 	objl::Vector3 lookAt=getLookAt();
 	gluLookAt(Camara.X, Camara.Y, Camara.Z,  //<-- Camara coordinates
 			lookAt.X, lookAt.Y, lookAt.Z, //<-- Look at coordinates
 			0, 1, 0);
 	glMatrixMode(GL_MODELVIEW);
+}
+
+void draw_scene(){
+	Cube baseC(Camara.X-400,Camara.Y/6,Camara.Z+400,800);
+	Cube leftC(Camara.X-700,Camara.Y/3,0,400);
+	Cube rightC(Camara.X+300,Camara.Y/3,0,400);
+	glColor4f(0,0,0,0.2);
+	baseC.draw2();
+	std::vector<objl::Vector3> HandPoints;
+	getLeapArticulationPoints(HandPoints);
+	if(leftC.check_intersection(HandPoints)){
+		inmove=true;
+		rotate_c-=5;
+		glColor4f(1.0,0.1,0.1,0.6);
+	} else {
+		glColor4f(0.2,0.0,0.0,0.6);
+	}
+	leftC.draw(3);
+	if(rightC.check_intersection(HandPoints)){
+		inmove=true;
+		rotate_c+=5;
+		glColor4f(1.0,0.1,0.1,0.6);
+	} else {
+		glColor4f(0.2,0.0,0.0,0.6);
+	}
+	rightC.draw(2);
 }
 
 void myDisplay(){
@@ -256,30 +294,7 @@ void myDisplay(){
 		draw_sceneMenu();
 	}
 	//glDisable(GL_DEPTH_TEST);
-	Cube baseC(Camara.X-400,0,Camara.Z+400,800);
-	Cube leftC(Camara.X-600,0,0,400);
-	Cube rightC(Camara.X+200,0,0,400);
-
-	glColor4f(0,0,0,0.2);
-	baseC.draw2();
-	std::vector<objl::Vector3> HandPoints;
-	getLeapArticulationPoints(HandPoints);
-	if(leftC.check_intersection(HandPoints)){
-		inmove=true;
-		rotate_c-=5;
-		glColor4f(1.0,0.1,0.1,0.6);
-	} else {
-		glColor4f(0.2,0.0,0.0,0.6);
-	}
-	leftC.draw(3);
-	if(rightC.check_intersection(HandPoints)){
-		inmove=true;
-		rotate_c+=5;
-		glColor4f(1.0,0.1,0.1,0.6);
-	} else {
-		glColor4f(0.2,0.0,0.0,0.6);
-	}
-	rightC.draw(2);
+	draw_scene();
 	//glDisable(GL_BLEND);
 	//glEnable(GL_DEPTH_TEST);
 	glFlush();
