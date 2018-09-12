@@ -1,6 +1,6 @@
 Requisitos:
 - Framework OpenGL, GLUT
-- Librería SDK Leap Motion (../lib/libLeap.dylib)
+- Librería SDK Leap Motion (/usr/local/lib/libLeap.dylib)
 - Librería libPNG (/usr/local/lib/libpng.dylib)
 - Sistema Operativo macOS.
 
