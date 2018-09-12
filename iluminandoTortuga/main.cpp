@@ -4,7 +4,6 @@
 #include "primitivas.h"
 #include "Vector_tools.h"
 #include "light.h"
-#include "obj.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -20,7 +19,6 @@ char strCommand[256];
 
 static Camara *MiCamara;
 static int old_x, old_y;
-objl::Loader Loader;
 
 /*
 void display(void) {
@@ -40,28 +38,6 @@ void display(void) {
     glutSwapBuffers();
 }
 */
-
-void draw_triangle(objl::Vertex v1, objl::Vertex v2, objl::Vertex v3){
-	glBegin(GL_TRIANGLES);
-	glVertex3f(v1.Position.X, v1.Position.Y, v1.Position.Z);
-	glVertex3f(v2.Position.X, v2.Position.Y, v2.Position.Z);
-	glVertex3f(v3.Position.X, v3.Position.Y, v3.Position.Z);                                
-	glEnd();
-}
-
-void draw_loadedMesh(int i){
-	objl::Mesh curMesh = Loader.LoadedMeshes[i];
-	for (int j=0;j<curMesh.Indices.size();j+=3){
-		draw_triangle(curMesh.Vertices[curMesh.Indices[j]],curMesh.Vertices[curMesh.Indices[j+1]],curMesh.Vertices[curMesh.Indices[j+2]]);
-	}
-}
-
-void draw_bottom(){
-	glColor3f(1.0, 0.0, 0.0);
-	draw_loadedMesh(2);
-	glColor3f(0.0, 0.0, 1.0);
-	draw_loadedMesh(3);
-}
 
 void display(void) {
 	float At[3];
@@ -318,20 +294,20 @@ void mouse(int button, int state, int x, int y){
 		case GLUT_LEFT_BUTTON:
 			if(current_light > 0){
 				if(current_light == 2 && spot_move == 1){
-if (state == GLUT_DOWN)
-glutMotionFunc(Mouse_Spot_Abrir_Cerrar);
-if (state == GLUT_UP){
-glutPassiveMotionFunc(Mouse_Spot);
-glutMotionFunc(NULL);
-}
-}else{
-				if (state == GLUT_DOWN)
-					glutMotionFunc(Mouse_Luces_Acercar_Alejar);
-				if (state == GLUT_UP){
-					glutPassiveMotionFunc(Mouse_Luces);
-					glutMotionFunc(NULL);
+					if (state == GLUT_DOWN)
+						glutMotionFunc(Mouse_Spot_Abrir_Cerrar);
+					if (state == GLUT_UP){
+						glutPassiveMotionFunc(Mouse_Spot);
+						glutMotionFunc(NULL);
+					}
+				}else{
+					if (state == GLUT_DOWN)
+						glutMotionFunc(Mouse_Luces_Acercar_Alejar);
+					if (state == GLUT_UP){
+						glutPassiveMotionFunc(Mouse_Luces);
+						glutMotionFunc(NULL);
+					}
 				}
-}
 			}else{
 				switch(MiCamara->camMovimiento){
 					case CAM_EXAMINAR:
@@ -349,7 +325,9 @@ glutMotionFunc(NULL);
 			}
 			break;
 		case GLUT_RIGHT_BUTTON:
-			if (state == GLUT_DOWN) ;
+			if (state == GLUT_DOWN){
+				printf("Right Buttom\n");
+			}
 			break;
 		default:
 			break;
@@ -552,10 +530,13 @@ static void SpecialKey ( int key, int x, int y ){
 			printf("Luz actual = %d\n",current_light);
 			break;
 		case GLUT_KEY_F9:
-			if (current_light != -1)
-			if ( LOCAL_MyLights[current_light]->switched )
-			SwitchLight( LOCAL_MyLights[current_light], FALSE);
-			else SwitchLight( LOCAL_MyLights[current_light], TRUE);
+			if (current_light != -1) {
+				if ( LOCAL_MyLights[current_light]->switched ){
+					SwitchLight( LOCAL_MyLights[current_light], FALSE);
+				} else {
+					SwitchLight( LOCAL_MyLights[current_light], TRUE);
+				}
+			}
 			break;
 		case GLUT_KEY_F10:
 			if (current_light == 2){
