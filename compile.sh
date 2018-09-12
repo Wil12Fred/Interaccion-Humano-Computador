@@ -1,5 +1,5 @@
 #ESTA COMPILACIÓN ES PARA EL SISTEMA OPERATIVO OS X
-c++ -o main main.cc -L/System/Library/Frameworks -framework GLUT -framework OpenGL /usr/local/lib/libLeap.dylib /usr/local/lib/libpng.dylib
+c++ -o main -std=c++11 main.cc -L/System/Library/Frameworks -framework GLUT -framework OpenGL /usr/local/lib/libLeap.dylib /usr/local/lib/libpng.dylib
 if [ $? -ne 0 ]; then 
 	echo "compilation error"
 else

@@ -85,7 +85,7 @@ void initQuadric(){
 }
 
 void initTopo(){
-	Topo=new Model("Topoo.obj",120);
+	Topo=new Model("Topo.obj",120);
 	//Topo->setToCenter(0, -70, -15);
 	Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
 	Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
@@ -95,7 +95,7 @@ void initTopo(){
 }
 
 void initBottom(){
-	Bottom=new Model("model.obj",1.5);
+	Bottom=new Model("Bottom.obj",1.5);
 	//Bottom->setToCenter(615-900, -70, 390-25);
 	Bottom->addMesh(2);Bottom->addColor(2,1.0,0.0,0.0);
 	Bottom->addMesh(3);Bottom->addColor(3,0.0,0.0,1.0);
