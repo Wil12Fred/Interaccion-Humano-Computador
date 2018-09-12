@@ -48,13 +48,8 @@ Controller controller;
 Model* Bottom;
 Model* Topo;
 
-objl::Vector3 Camara;
+objl::Vector3 Camara, LookAt;
 double ratio=250;
-
-objl::Vector3 getLookAt(){
-	return getCircleCoordinate(objl::Vector3(Camara.X,Camara.Y/2,Camara.Z),
-					ratio,rotate_c);
-}
 
 objl::Vector3 getPos(objl::Vector3 point){
 	objl::Vector3 Center=Camara;
@@ -69,7 +64,20 @@ objl::Vector3 getPos(double x, double y, double z){
 	return getPos(point);
 }
 
+objl::Vector3 getLookAt(){
+	objl::Vector3 toLook=Camara+LookAt;
+	return getPos(toLook);
+	//return getCircleCoordinate(objl::Vector3(Camara.X,Camara.Y/2,Camara.Z),
+					//ratio,rotate_c);
+}
+
 #include "hand_primitivas.h"
+
+void ZoomIn2(){
+	ratio/=2;
+	Camara.Y/=2;
+	Camara.Z=ratio;
+}
 
 void initQuadric(){
 	qobj = gluNewQuadric();
@@ -101,7 +109,8 @@ void initVariables(){
 	initTopo();
 	initBottom();
 	gameBackup=true;
-	Camara=objl::Vector3(0,300,250);
+	Camara=objl::Vector3(0,300,ratio);
+	LookAt=objl::Vector3(-Camara.X,-Camara.Y,-Camara.Z);//getLookAt();
 }
 
 void initGlVariables(){
@@ -139,6 +148,8 @@ void specialKeys(int key, int x, int y){
 		rotate_c-=5;
 	} else if (key == GLUT_KEY_F5){
 		rotate_c+=5;
+	} else if (key == GLUT_KEY_F6){
+		ZoomIn2();
 	}
 	glutPostRedisplay();
 }
@@ -237,7 +248,7 @@ void idle(void){
 void loadCamera(){
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(130,1.0,100,2000);
+	gluPerspective(130,1.0,1,2000);
 	objl::Vector3 lookAt=getLookAt();
 	gluLookAt(Camara.X, Camara.Y, Camara.Z,  //<-- Camara coordinates
 			lookAt.X, lookAt.Y, lookAt.Z, //<-- Look at coordinates
