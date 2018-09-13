@@ -73,9 +73,15 @@ objl::Vector3 getLookAt(){
 
 #include "hand_primitivas.h"
 
-void ZoomIn2(){
-	ratio/=2;
-	Camara.Y/=2;
+void ZoomIn(){
+	ratio*=(3.0/4);
+	Camara.Y*=(3.0/4);
+	Camara.Z=ratio;
+}
+
+void ZoomOut(){
+	ratio*=(4.0/3);
+	Camara.Y*=(4.0/3);
 	Camara.Z=ratio;
 }
 
@@ -117,6 +123,7 @@ void initGlVariables(){
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
+	glEnable(GL_ALPHA_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glClearColor(0.3, 0.8, 0.8, 0.5);
 }
@@ -149,7 +156,9 @@ void specialKeys(int key, int x, int y){
 	} else if (key == GLUT_KEY_F5){
 		rotate_c+=5;
 	} else if (key == GLUT_KEY_F6){
-		ZoomIn2();
+		ZoomIn();
+	} else if (key == GLUT_KEY_F7){
+		ZoomOut();
 	}
 	glutPostRedisplay();
 }
@@ -248,36 +257,39 @@ void idle(void){
 void loadCamera(){
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(130,1.0,1,2000);
+	gluPerspective(130,	//<-- fovy
+			1.0,	//<-- aspect
+			1,	//<-- zNear
+			2000);	//<-- zFar
 	objl::Vector3 lookAt=getLookAt();
-	gluLookAt(Camara.X, Camara.Y, Camara.Z,  //<-- Camara coordinates
-			lookAt.X, lookAt.Y, lookAt.Z, //<-- Look at coordinates
-			0, 1, 0);
+	gluLookAt(Camara.X, Camara.Y, Camara.Z,		//<-- Camara coordinate
+			lookAt.X, lookAt.Y, lookAt.Z,	//<-- Look at coordinate
+			0, 1, 0);			//<-- Up vector direction
 	glMatrixMode(GL_MODELVIEW);
 }
 
 void draw_scene(){
 	Cube baseC(Camara.X-400,Camara.Y/6,Camara.Z+400,800);
-	Cube leftC(Camara.X-700,Camara.Y/3,0,400);
-	Cube rightC(Camara.X+300,Camara.Y/3,0,400);
-	glColor4f(0,0,0,0.2);
+	Cube leftC(Camara.X-700,Camara.Y/2,0,400);
+	Cube rightC(Camara.X+300,Camara.Y/2,0,400);
+	glColor4f(0,0.2,0,0.3);
 	baseC.draw2();
 	std::vector<objl::Vector3> HandPoints;
 	getLeapArticulationPoints(HandPoints);
 	if(leftC.check_intersection(HandPoints)){
 		inmove=true;
 		rotate_c-=5;
-		glColor4f(1.0,0.1,0.1,0.6);
+		glColor4f(1.0,0.1,0.1,0.3);
 	} else {
-		glColor4f(0.2,0.0,0.0,0.6);
+		glColor4f(0.2,0.0,0.0,0.3);
 	}
 	leftC.draw(3);
 	if(rightC.check_intersection(HandPoints)){
 		inmove=true;
 		rotate_c+=5;
-		glColor4f(1.0,0.1,0.1,0.6);
+		glColor4f(1.0,0.1,0.1,0.3);
 	} else {
-		glColor4f(0.2,0.0,0.0,0.6);
+		glColor4f(0.2,0.0,0.0,0.3);
 	}
 	rightC.draw(2);
 }
@@ -289,7 +301,6 @@ void myDisplay(){
 	//dibujar escenario Menu o Game
 	loadCamera();
 	draw_hands();
-	//Escenario
 	//glEnable(GL_BLEND);
 	if(game){
 		if(gameBackup!=game){
@@ -304,6 +315,7 @@ void myDisplay(){
 		gameBackup=game;
 		draw_sceneMenu();
 	}
+	//Escenario
 	//glDisable(GL_DEPTH_TEST);
 	draw_scene();
 	//glDisable(GL_BLEND);
