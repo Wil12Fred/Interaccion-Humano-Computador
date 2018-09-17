@@ -57,7 +57,6 @@ struct Objeto{
 				}
 			}
 		}
-		std::cout <<"pase: " << intersected  << " " <<prIntersected<< std::endl;
 		if(prIntersected){
 			if(intersected){
 				intersected=false;
