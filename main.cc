@@ -17,20 +17,16 @@
 #include "png_texture.h"
 #include "primitivas.h"
 #include "objetoModel.h"
+#include "Vector_tools.h"
+#include "light.h"
+#include "utility.h"
 
-objl::Vector3 getCircleCoordinate(objl::Vector3 Center, double r, double angle){
-	Center.X+=sin((angle*pi)/180)*r;
-	Center.Z-=cos((angle*pi)/180)*r;
-	return Center;
-}
+static light **LOCAL_MyLights;
+static int current_mode = 0;
+static int current_light = -1;
+static int spot_move=0;
 
-objl::Vector3 getCircleCoordinate(objl::Vector3 Center, objl::Vector3 point, double r, double angle){
-	objl::Vector3 dif=point-Center;
-	angle+=(asin(dif.X/r)*180)/pi;
-	Center.X+=sin((angle*pi)/180)*r;
-	Center.Z-=cos((angle*pi)/180)*r;
-	return Center;
-}
+#include "mouse.h"
 
 double rotate_x=0;
 double rotate_y=0; 
@@ -40,6 +36,8 @@ GLUquadric* qobj;
 
 bool game=false;
 bool gameBackup;
+bool topoo=true;
+bool topooBackup;
 bool inmove=false;
 
 SampleListener listener;
@@ -90,14 +88,29 @@ void initQuadric(){
 	gluQuadricNormals(qobj, GLU_SMOOTH);
 }
 
-void initTopo(){
-	Topo=new Model("Topo.obj",120);
+void initDiglet(){
+	Topo=new Model("Diglett.obj",40);
 	//Topo->setToCenter(0, -70, -15);
+	std::cout << Topo->formatObj.LoadedMeshes.size() << std::endl;
 	Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
 	Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
 	Topo->moveToCenter();
 	Topo->useColor=true;
 	Topo->solid();
+}
+
+void initTopo(){
+	if(topoo){
+		Topo=new Model("Topo.obj",120);
+		//Topo->setToCenter(0, -70, -15);
+		Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
+		Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
+		Topo->moveToCenter();
+		Topo->useColor=true;
+		Topo->solid();
+	} else {
+		initDiglet();
+	}
 }
 
 void initBottom(){
@@ -125,7 +138,8 @@ void initGlVariables(){
 	glEnable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClearColor(0.3, 0.8, 0.8, 0.5);
+	//glClearColor(0.3, 0.8, 0.8, 0.5);
+	glColor3f(1.0,1.0,0.0);
 }
 
 void myInit() {
@@ -159,6 +173,25 @@ void specialKeys(int key, int x, int y){
 		ZoomIn();
 	} else if (key == GLUT_KEY_F7){
 		ZoomOut();
+	} else if (key == GLUT_KEY_F8){
+		if (current_mode != 0 && current_mode != 7){
+		} else {
+			current_mode = 7;
+			if (current_light == -1) glutPassiveMotionFunc(Mouse_Luces);
+			if (current_light != 2) current_light++;                    
+			else current_light = 0;
+			printf("Luz actual = %d\n",current_light);                  
+		}
+		//break;
+	} else if(key==GLUT_KEY_F9){
+		if (current_light != -1) {
+			if ( LOCAL_MyLights[current_light]->switched ){
+				SwitchLight( LOCAL_MyLights[current_light], FALSE);
+			} else {
+				SwitchLight( LOCAL_MyLights[current_light], TRUE);
+			}
+		}
+		//break;
 	}
 	glutPostRedisplay();
 }
@@ -178,8 +211,7 @@ void createBottoms(){
 	}
 }
 
-void createTopos(){
-	int n_topos=4;
+void createTopos(int n_topos=4,double amp=400, double dist=0){
 	int scens=6;
 	double angle;
 	if(n_topos>1){
@@ -189,8 +221,7 @@ void createTopos(){
 	}
 	Topos.clear();
 	objl::Vector3 Center=Camara, Position;
-	Center.Y/=6;
-	double amp=400;
+	Center.Y/=5;
 	Center.Z+=amp;
 	double begin;
 	if(n_topos>1){
@@ -199,7 +230,7 @@ void createTopos(){
 		begin=0;
 	}
 	for (int i=0;i<n_topos;i++){
-		Position=getCircleCoordinate(Center,Center.Z,begin+i*angle);
+		Position=getCircleCoordinate(Center,Center.Z+dist,begin+i*angle);
 		Topos.push_back(Objeto(Topo,Position));
 	}
 }
@@ -207,6 +238,9 @@ void createTopos(){
 void draw_bottoms(){
 	for (int i=0;i<Bottoms.size();i++){
 		Bottoms[i].draw();
+	}
+	if(Bottoms[0].intersected && Bottoms[1].maxY<=0){
+		topoo=!topoo;
 	}
 	if(Bottoms[1].intersected && Bottoms[1].maxY<=0){
 		game=!game;
@@ -230,6 +264,7 @@ void draw_sceneMenu(){
 		Bottoms[i].intersecta(Articulation_Points);
 	}
 	draw_bottoms();
+	draw_topos();
 }
 
 void draw_sceneGame(){
@@ -248,7 +283,7 @@ void draw_sceneGame(){
 }
 
 void idle(void){
-	if(gameBackup!=game || NEWHAND || inmove){
+	if( topoo!=topooBackup|| gameBackup!=game || NEWHAND || inmove){
 		NEWHAND=false;
 		glutPostRedisplay();
 	}
@@ -270,8 +305,8 @@ void loadCamera(){
 
 void draw_scene(){
 	Cube baseC(Camara.X-400,Camara.Y/6,Camara.Z+400,800);
-	Cube leftC(Camara.X-700,Camara.Y/2,0,400);
-	Cube rightC(Camara.X+300,Camara.Y/2,0,400);
+	Cube leftC(Camara.X-600,Camara.Y/2,0,400);
+	Cube rightC(Camara.X+200,Camara.Y/2,0,400);
 	glColor4f(0,0.2,0,0.3);
 	baseC.draw2();
 	std::vector<objl::Vector3> HandPoints;
@@ -294,22 +329,80 @@ void draw_scene(){
 	rightC.draw(2);
 }
 
-void myDisplay(){
+void display(void){
+	float At[3];
+	float Direction[3];
+	switch( current_light ){
+		case 0:
+			At[0] = LOCAL_MyLights[current_light]->position[0];
+			At[1] = LOCAL_MyLights[current_light]->position[1];         
+			At[2] = LOCAL_MyLights[current_light]->position[2];         
+			Direction[0] = - LOCAL_MyLights[current_light]->position[0];
+			Direction[1] = - LOCAL_MyLights[current_light]->position[1];
+			Direction[2] = - LOCAL_MyLights[current_light]->position[2];
+			Draw_Parallel(At);
+			Draw_Meridian(At);
+			Draw_Vector(At, Direction);                                 
+			break;
+		case 1:
+                         At[0] = LOCAL_MyLights[current_light]->position[0];  
+                         At[1] = LOCAL_MyLights[current_light]->position[1];  
+                         At[2] = LOCAL_MyLights[current_light]->position[2];  
+                         Draw_Parallel(At);
+                         Draw_Meridian(At);
+                         glTranslatef(At[0],At[1],At[2]);                     
+                         glColor3f(1.0,0.0,0.0);                              
+                         glutSolidSphere(0.05,28,28);                         
+                         break;
+		case 2:
+                        At[0] = LOCAL_MyLights[current_light]->position[0];            
+                        At[1] = LOCAL_MyLights[current_light]->position[1];            
+                        At[2] = LOCAL_MyLights[current_light]->position[2];            
+                        Direction[0] = LOCAL_MyLights[current_light]->spotDirection[0];
+                        Direction[1] = LOCAL_MyLights[current_light]->spotDirection[1];
+                        Direction[2] = LOCAL_MyLights[current_light]->spotDirection[2];
+                        Draw_Parallel(At);
+                        Draw_Meridian(At);
+                        glColor3f(1.0,0.0,0.0);                                        
+                        Draw_Vector(At, Direction);                                    
+                        Draw_Sphere_Spot(At, Direction);                               
+                        glTranslatef(At[0],At[1],At[2]);                               
+                        glutSolidSphere(0.05,28,28);                                   
+                        break;
+		default:
+			break;
+	}
+	glPopMatrix();
+	glutSwapBuffers();
+}
+
+void myDisplay(void){
 	inmove=false;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_BLENT_BUFFER_BIT);
+	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
 	glLoadIdentity();
 	//dibujar escenario Menu o Game
+	glLoadIdentity();
+	SetLight( LOCAL_MyLights[0] );
+	SetLight( LOCAL_MyLights[1] );
+	SetLight( LOCAL_MyLights[2] );
+	glPushMatrix();
 	loadCamera();
 	draw_hands();
 	//glEnable(GL_BLEND);
 	if(game){
+		//initTopo();
 		if(gameBackup!=game){
+			initTopo();
+			//topoo=!topoo;
 			createTopos();
 		}
 		gameBackup=game;
 		draw_sceneGame();
 	} else {
-		if(gameBackup!=game){
+		if(topooBackup!=topoo){
+			createTopos(1,400,200);
 			createBottoms();
 		}
 		gameBackup=game;
@@ -318,10 +411,49 @@ void myDisplay(){
 	//Escenario
 	//glDisable(GL_DEPTH_TEST);
 	draw_scene();
+	display();
 	//glDisable(GL_BLEND);
 	//glEnable(GL_DEPTH_TEST);
 	glFlush();
 	glutSwapBuffers();
+}
+
+void lightVariables(){
+	//DIRECCIONAL
+	LOCAL_MyLights = (light **) malloc( 3 * sizeof(light *));
+	LOCAL_MyLights[0] = CreateDefaultLight();
+	LOCAL_MyLights[0]->type = AGA_DIRECTIONAL;
+	LOCAL_MyLights[0]->id = GL_LIGHT0;
+	LOCAL_MyLights[0]->position[0] = 1.0f;
+	LOCAL_MyLights[0]->position[1] = 1.0f;
+	LOCAL_MyLights[0]->position[2] = 1.0f;
+	LOCAL_MyLights[0]->position[3] = 0.0f;
+	LOCAL_MyLights[0]->pointAtInfinity[0] = LOCAL_MyLights[0]->position[0];
+	LOCAL_MyLights[0]->pointAtInfinity[1] = LOCAL_MyLights[0]->position[1];
+	LOCAL_MyLights[0]->pointAtInfinity[2] = LOCAL_MyLights[0]->position[2];
+	//POSICIONAL
+	LOCAL_MyLights[1] = CreateDefaultLight();
+	LOCAL_MyLights[1]->type = AGA_POSITIONAL;
+	LOCAL_MyLights[1]->id = GL_LIGHT1;
+	LOCAL_MyLights[1]->position[0] = 1.0f;
+	LOCAL_MyLights[1]->position[1] = 1.0f;
+	LOCAL_MyLights[1]->position[2] = -1.0f;
+	LOCAL_MyLights[1]->position[3] = 1.0f;
+	//SPOT
+	LOCAL_MyLights[2] = CreateDefaultLight();
+	LOCAL_MyLights[2]->type = AGA_SPOT;
+	LOCAL_MyLights[2]->id = GL_LIGHT2;
+	LOCAL_MyLights[2]->position[0] = -1.0f;     
+	LOCAL_MyLights[2]->position[1] = 1.0f;
+	LOCAL_MyLights[2]->position[2] = 1.0f;
+	LOCAL_MyLights[2]->spotDirection[0] = 1.0f; 
+	LOCAL_MyLights[2]->spotDirection[1] = -1.0f;
+	LOCAL_MyLights[2]->spotDirection[2] = -1.0f;
+}
+
+void reshape(int width, int height) {
+    //glViewport(0, 0, width, height);
+    //MiCamara->SetGLAspectRatioCamera();
 }
 
 int main(int argc, char **argv){
@@ -331,9 +463,16 @@ int main(int argc, char **argv){
 	glutInitWindowSize(500, 500);
 	glutInitWindowPosition(0, 0);
 	glutCreateWindow("Interacción Humano Computador");
-	myInit();
-	glutIdleFunc(idle);
 	glutDisplayFunc(myDisplay);
+	glutReshapeFunc(reshape);
 	glutSpecialFunc(specialKeys);
+	glutMouseFunc(mouse);
+	glutIdleFunc(idle);
+	glutMotionFunc(NULL);
+	glutPassiveMotionFunc(MouseMotion);
+	myInit();
+	glutMotionFunc(NULL);
+	lightVariables();
+	glEnable(GL_COLOR_MATERIAL);
 	glutMainLoop();
 }

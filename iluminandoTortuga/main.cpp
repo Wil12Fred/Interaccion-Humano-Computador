@@ -45,10 +45,8 @@ void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);  
-
 	//SetGLCamera( MiCamara );
 	MiCamara->SetGLCamera();
-
 	SetLight( LOCAL_MyLights[0] );
 	SetLight( LOCAL_MyLights[1] );
 	SetLight( LOCAL_MyLights[2] );
@@ -142,83 +140,58 @@ void MouseMotion(int x, int y) {
 }
 
 void Zoom(int x, int y) {
-
     float zoom;
-
     zoom = (float) ((y - old_y) * DEGREE_TO_RAD);
     old_y = y;
-
     switch (MiCamara->camMovimiento) {
-
         case CAM_EXAMINAR:
             if (MiCamara->camAperture + zoom > (5 * DEGREE_TO_RAD) && MiCamara->camAperture + zoom < 175 * DEGREE_TO_RAD)
                 MiCamara->camAperture = MiCamara->camAperture + zoom;
             break;
-
     }
-
     glutPostRedisplay();
 }
 
 void Examinar(int x, int y) {
-
     float rot_x, rot_y;
-
     rot_y = (float) (old_y - y);
     rot_x = (float) (x - old_x);
     MiCamara->Rotar_Latitud( rot_y * DEGREE_TO_RAD);
     MiCamara->Rotar_Longitud(rot_x * DEGREE_TO_RAD);
-
     old_y = y;
     old_x = x;
-
     glutPostRedisplay();
-
 }
 
-
-
 void Mouse_Spot_Abrir_Cerrar(int x, int y) {
-
     float step;
-
     step = (float) (y - old_y);
     old_y = y;
-
     if (LOCAL_MyLights[current_light]->spotCutOff + step < 90 && LOCAL_MyLights[current_light]->spotCutOff + step > 0)
         LOCAL_MyLights[current_light]->spotCutOff += step;
-
     LOCAL_MyLights[current_light]->needsUpdate = TRUE;
     glutPostRedisplay();
 }
 
 void Mouse_Spot(int x, int y) {
     float rot_x, rot_y;
-
     rot_y = (float) (old_y - y);
     rot_x = (float) (x - old_x);
-
     Rotar_Spot_Latitud(LOCAL_MyLights[current_light], rot_y * DEGREE_TO_RAD);
     Rotar_Spot_Longitud(LOCAL_MyLights[current_light], rot_x * DEGREE_TO_RAD);
-
     old_y = y;
     old_x = x;
-
     glutPostRedisplay();
 }
 
 void Andar(int x, int y) {
-
     float rotacion_x, avance_y;
-
     avance_y = (float) (y - old_y) / 10;
     rotacion_x = (float) (old_x - x) * DEGREE_TO_RAD / 5;
     MiCamara->YawCamera(rotacion_x);
     MiCamara->AvanceFreeCamera(avance_y);
-
     old_y = y;
     old_x = x;
-
     glutPostRedisplay();
 }
 
@@ -246,16 +219,11 @@ void Mouse_Luces(int x, int y){
 
 /*
 void mouse(int button, int state, int x, int y) {
-
     old_x = x;
     old_y = y;
-
     switch (button) {
-
         case GLUT_LEFT_BUTTON:
-
             switch (MiCamara->camMovimiento) {
-
                 case CAM_EXAMINAR:
                     if (state == GLUT_DOWN)
                         glutMotionFunc(Zoom);
@@ -264,7 +232,6 @@ void mouse(int button, int state, int x, int y) {
                         glutMotionFunc(NULL);
                     }
                     break;
-
                 case CAM_PASEAR:
                     if (state == GLUT_DOWN)
                         glutMotionFunc(Andar);
@@ -272,17 +239,13 @@ void mouse(int button, int state, int x, int y) {
                         glutMotionFunc(NULL);
                     break;
             }
-
         case GLUT_RIGHT_BUTTON:
             if (state == GLUT_DOWN)
                 //glutMotionFunc(scale);
                 break;
-
         default:
             break;
-
     }
-
     glutPostRedisplay();
 }
 */
@@ -387,7 +350,6 @@ void keyboard(unsigned char key, int x, int y) {
 				break;
         }
     }
-
     if (current_mode==7){
 		switch (key) {
 			case 'R':
@@ -428,7 +390,6 @@ void keyboard(unsigned char key, int x, int y) {
 				break;
 		}
 	}
-
     glutPostRedisplay();
 }
 
@@ -450,39 +411,32 @@ static void SpecialKey(int key, int x, int y) {
             MiCamara->camViewY = 0;
             MiCamara->SetDependentParametersCamera();
             break;
-
         case GLUT_KEY_PAGE_UP:
             //AvanceFreeCamera( MiCamara, 0.5f );
             if (MiCamara->camAperture < 175 * DEGREE_TO_RAD)
                 MiCamara->camAperture = MiCamara->camAperture + 2.5f * DEGREE_TO_RAD;
             break;
-
         case GLUT_KEY_PAGE_DOWN:
             //AvanceFreeCamera( MiCamara, -0.5f );
             if (MiCamara->camAperture > 5 * DEGREE_TO_RAD)
                 MiCamara->camAperture = MiCamara->camAperture - 2.5f * DEGREE_TO_RAD;
             break;
-
         case GLUT_KEY_UP:
             MiCamara->Rotar_Latitud( 2.5f * DEGREE_TO_RAD);
             //PitchCamera( MiCamara, 3.0f * DEGREE_TO_RAD );
             break;
-
         case GLUT_KEY_DOWN:
             MiCamara->Rotar_Latitud( -2.5f * DEGREE_TO_RAD);
             //PitchCamera( MiCamara, -3.0f * DEGREE_TO_RAD );
             break;
-
         case GLUT_KEY_LEFT:
             MiCamara->Rotar_Longitud( -2.5f * DEGREE_TO_RAD);
             //YawCamera( MiCamara, 3.0f * DEGREE_TO_RAD );
             break;
-
         case GLUT_KEY_RIGHT:
             MiCamara->Rotar_Longitud(2.5f * DEGREE_TO_RAD);
             //YawCamera( MiCamara, -3.0f * DEGREE_TO_RAD );
             break;
-
         case GLUT_KEY_HOME: //Reset Camera
             MiCamara->camAtX = 0;
             MiCamara->camAtY = 0;
@@ -572,26 +526,21 @@ int main(int argc, char** argv) {
 		return 0;
 	}*/
 	glutInit(&argc, argv);
-
 	// Colocamos la cámara en (0,1,-3) mirando hacia (0,0,0)
 	MiCamara = new Camara(0.0f, 1.0f, -3.0f);
-
 	glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(512, 512);
 	glutInitWindowPosition(20, 20);
 	glutCreateWindow("tortuga");
 	//glEnable(GL_COLOR_MATERIAL);
-
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(SpecialKey);
-
 	//Ratón
 	glutMouseFunc(mouse); //Pulsado de Botones
 	glutMotionFunc(NULL); //Movimiento con Botones pulsados
 	glutPassiveMotionFunc(MouseMotion); //Movimientos sin Botones pulsados
-
 	//Creamos las luces y damos a cada una sus características
 	//DIRECCIONAL
 	LOCAL_MyLights = (light **) malloc( 3 * sizeof(light *));

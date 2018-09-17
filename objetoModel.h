@@ -6,6 +6,7 @@ struct Objeto{
 	std::map<int, objl::Vector3> Colores;
 	bool useColor;
 	bool intersected;
+	bool prIntersected;
 	bool invisible;
 	float maxY;
 	Objeto(){
@@ -13,6 +14,7 @@ struct Objeto{
 		useColor=false;
 		intersected=false;
 		invisible=false;
+		prIntersected=true;
 	}
 	Objeto(Model* m, objl::Vector3 Mov){
 		model=m;
@@ -53,6 +55,14 @@ struct Objeto{
 				} else  {
 					maxY=std::min(maxY,*topY);
 				}
+			}
+		}
+		std::cout <<"pase: " << intersected  << " " <<prIntersected<< std::endl;
+		if(prIntersected){
+			if(intersected){
+				intersected=false;
+			} else {
+				prIntersected=false;
 			}
 		}
 		return intersected;
