@@ -20,7 +20,6 @@
 #include "Vector_tools.h"
 #include "light.h"
 #include "utility.h"
-
 static light **LOCAL_MyLights;
 static int current_mode = 0;
 static int current_light = -1;
@@ -31,7 +30,7 @@ static int spot_move=0;
 double rotate_x=0;
 double rotate_y=0; 
 double rotate_z=0;
-double rotate_c=0;
+//double rotate_c=0;
 GLUquadric* qobj;
 
 bool game=false;
@@ -43,18 +42,12 @@ bool inmove=false;
 SampleListener listener;
 Controller controller;
 
-Model* Bottom;
-Model* Topo;
+#include "camara.h"
 
-objl::Vector3 Camara, LookAt;
-double ratio=250;
+static Camara *MiCamara;
 
 objl::Vector3 getPos(objl::Vector3 point){
-	objl::Vector3 Center=Camara;
-	Center.Y=point.Y;
-	double r=(point-Center).norm();
-	return getCircleCoordinate(Center, point,
-					r,rotate_c);
+	return MiCamara->getPos(point);
 }
 
 objl::Vector3 getPos(double x, double y, double z){
@@ -63,35 +56,21 @@ objl::Vector3 getPos(double x, double y, double z){
 }
 
 objl::Vector3 getLookAt(){
-	objl::Vector3 toLook=Camara+LookAt;
-	return getPos(toLook);
-	//return getCircleCoordinate(objl::Vector3(Camara.X,Camara.Y/2,Camara.Z),
-					//ratio,rotate_c);
+	return MiCamara->getLookAt();
 }
 
 #include "hand_primitivas.h"
-
-void ZoomIn(){
-	ratio*=(3.0/4);
-	Camara.Y*=(3.0/4);
-	Camara.Z=ratio;
-}
-
-void ZoomOut(){
-	ratio*=(4.0/3);
-	Camara.Y*=(4.0/3);
-	Camara.Z=ratio;
-}
 
 void initQuadric(){
 	qobj = gluNewQuadric();
 	gluQuadricNormals(qobj, GLU_SMOOTH);
 }
 
+Model* Bottom;
+Model* Topo;
+
 void initDiglet(){
-	Topo=new Model("Diglett.obj",40);
-	//Topo->setToCenter(0, -70, -15);
-	std::cout << Topo->formatObj.LoadedMeshes.size() << std::endl;
+	Topo=new Model("Diglett.obj",50);
 	Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
 	Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
 	Topo->moveToCenter();
@@ -102,7 +81,6 @@ void initDiglet(){
 void initTopo(){
 	if(topoo){
 		Topo=new Model("Topo.obj",120);
-		//Topo->setToCenter(0, -70, -15);
 		Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
 		Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
 		Topo->moveToCenter();
@@ -115,7 +93,6 @@ void initTopo(){
 
 void initBottom(){
 	Bottom=new Model("Bottom.obj",1.5);
-	//Bottom->setToCenter(615-900, -70, 390-25);
 	Bottom->addMesh(2);Bottom->addColor(2,1.0,0.0,0.0);
 	Bottom->addMesh(3);Bottom->addColor(3,0.0,0.0,1.0);
 	Bottom->moveToCenter();
@@ -128,8 +105,12 @@ void initVariables(){
 	initTopo();
 	initBottom();
 	gameBackup=true;
-	Camara=objl::Vector3(0,300,ratio);
-	LookAt=objl::Vector3(-Camara.X,-Camara.Y,-Camara.Z);//getLookAt();
+	MiCamara->SetCamera(0, 300, 250,
+				0, -300, -250,
+				0, 1, 0);
+	MiCamara->camAperture=130 * DEGREE_TO_RAD;
+	MiCamara->camNear = 1;
+	MiCamara->camFar = 2000;
 }
 
 void initGlVariables(){
@@ -138,8 +119,7 @@ void initGlVariables(){
 	glEnable(GL_BLEND);
 	glEnable(GL_ALPHA_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glClearColor(0.3, 0.8, 0.8, 0.5);
-	glColor3f(1.0,1.0,0.0);
+	glClearColor(0.3, 0.8, 0.8, 0.5);
 }
 
 void myInit() {
@@ -166,13 +146,13 @@ void specialKeys(int key, int x, int y){
 	} else if (key == GLUT_KEY_F3){
 		rotate_z+=5;
 	} else if (key == GLUT_KEY_F4){
-		rotate_c-=5;
+		MiCamara->rotate_c-=5;
 	} else if (key == GLUT_KEY_F5){
-		rotate_c+=5;
+		MiCamara->rotate_c+=5;
 	} else if (key == GLUT_KEY_F6){
-		ZoomIn();
+		MiCamara->ZoomIn();
 	} else if (key == GLUT_KEY_F7){
-		ZoomOut();
+		MiCamara->ZoomOut();
 	} else if (key == GLUT_KEY_F8){
 		if (current_mode != 0 && current_mode != 7){
 		} else {
@@ -192,6 +172,17 @@ void specialKeys(int key, int x, int y){
 			}
 		}
 		//break;
+	} else if (key==GLUT_KEY_F10){
+		if (current_light == 2){
+			if ( spot_move == 0 ){
+				glutPassiveMotionFunc(Mouse_Spot);
+				spot_move = 1;
+			}else{
+				glutPassiveMotionFunc(Mouse_Luces);
+				spot_move = 0;
+			}
+		}
+		//break;
 	}
 	glutPostRedisplay();
 }
@@ -200,18 +191,28 @@ std::vector<objl::Vector3> Articulation_Points;
 std::vector<Objeto> Topos, Bottoms;
 
 void createBottoms(){
+	int scens=6;
+	double angle=360.0/(scens*(3-1));
 	Bottoms.clear();
-	objl::Vector3 Center=Camara, Position;
-	Center.Y/=6;
-	double angle=45;
-	double beg=-45;
+	objl::Vector3 Center=MiCamara->camView, Position;
+	Center.Y/=4;
+	double beg=-(360.0/(scens*2));
 	for (int i=0;i<3;i++){
 		Position=getCircleCoordinate(Center,350,beg+i*angle);
 		Bottoms.push_back(Objeto(Bottom,Position));
 	}
+	Bottoms[0].useColor=true;
+	Bottoms[0].Colores[2]=objl::Vector3(1,1.0,0.0);
+	Bottoms[0].Colores[3]=objl::Vector3(1,0.0,0.0);
+	Bottoms[1].useColor=true;
+	Bottoms[1].Colores[2]=objl::Vector3(0,1.0,0.0);
+	Bottoms[1].Colores[3]=objl::Vector3(1,0.0,0.0);
+	Bottoms[2].useColor=true;
+	Bottoms[2].Colores[2]=objl::Vector3(0.0,0.0,1.0);
+	Bottoms[2].Colores[3]=objl::Vector3(1,0.0,0.0);
 }
 
-void createTopos(int n_topos=4,double amp=400, double dist=0){
+void createTopos(int n_topos=4,double amp=400, double dist=0, double CY=MiCamara->camView.Y/4){
 	int scens=6;
 	double angle;
 	if(n_topos>1){
@@ -220,8 +221,8 @@ void createTopos(int n_topos=4,double amp=400, double dist=0){
 		angle = 0;
 	}
 	Topos.clear();
-	objl::Vector3 Center=Camara, Position;
-	Center.Y/=5;
+	objl::Vector3 Center=MiCamara->camView, Position;
+	Center.Y=CY;
 	Center.Z+=amp;
 	double begin;
 	if(n_topos>1){
@@ -239,11 +240,15 @@ void draw_bottoms(){
 	for (int i=0;i<Bottoms.size();i++){
 		Bottoms[i].draw();
 	}
-	if(Bottoms[0].intersected && Bottoms[1].maxY<=0){
+	if(Bottoms[0].intersected && Bottoms[0].maxY<=0){
 		topoo=!topoo;
 	}
 	if(Bottoms[1].intersected && Bottoms[1].maxY<=0){
 		game=!game;
+	}
+	if(Bottoms[2].intersected && Bottoms[2].maxY<=0){
+		delete MiCamara;
+		exit(0);
 	}
 }
 
@@ -290,49 +295,44 @@ void idle(void){
 }
 
 void loadCamera(){
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(130,	//<-- fovy
-			1.0,	//<-- aspect
-			1,	//<-- zNear
-			2000);	//<-- zFar
-	objl::Vector3 lookAt=getLookAt();
-	gluLookAt(Camara.X, Camara.Y, Camara.Z,		//<-- Camara coordinate
-			lookAt.X, lookAt.Y, lookAt.Z,	//<-- Look at coordinate
-			0, 1, 0);			//<-- Up vector direction
-	glMatrixMode(GL_MODELVIEW);
+	if(gameBackup!=game){
+		MiCamara->rotate_c=0;
+	}
+	MiCamara->SetGLCamera();
 }
 
 void draw_scene(){
-	Cube baseC(Camara.X-400,Camara.Y/6,Camara.Z+400,800);
-	Cube leftC(Camara.X-600,Camara.Y/2,0,400);
-	Cube rightC(Camara.X+200,Camara.Y/2,0,400);
-	glColor4f(0,0.2,0,0.3);
+	Cube baseC(/*MiCamara->camView.X*/-400,MiCamara->camView.Y/5,/*MiCamara->camView.Z*/+400,800);
+	Cube leftC(/*MiCamara->camView.X*/-400,230/*MiCamara->camView.Y/2*/,200,400);
+	Cube rightC(/*MiCamara->camView.X+*/0,230/*MiCamara->camView.Y/2*/,200,400);
+	glColor4f(0,0.2,0,0.8);
 	baseC.draw2();
 	std::vector<objl::Vector3> HandPoints;
 	getLeapArticulationPoints(HandPoints);
 	if(leftC.check_intersection(HandPoints)){
 		inmove=true;
-		rotate_c-=5;
+		MiCamara->rotate_c-=5;
 		glColor4f(1.0,0.1,0.1,0.3);
+		leftC.draw(1);
 	} else {
 		glColor4f(0.2,0.0,0.0,0.3);
+		leftC.draw(3);
 	}
-	leftC.draw(3);
 	if(rightC.check_intersection(HandPoints)){
 		inmove=true;
-		rotate_c+=5;
+		MiCamara->rotate_c+=5;
 		glColor4f(1.0,0.1,0.1,0.3);
+		rightC.draw(1);
 	} else {
 		glColor4f(0.2,0.0,0.0,0.3);
+		rightC.draw(2);
 	}
-	rightC.draw(2);
 }
 
 void display(void){
 	float At[3];
 	float Direction[3];
-	switch( current_light ){
+	switch (current_light){
 		case 0:
 			At[0] = LOCAL_MyLights[current_light]->position[0];
 			At[1] = LOCAL_MyLights[current_light]->position[1];         
@@ -342,7 +342,7 @@ void display(void){
 			Direction[2] = - LOCAL_MyLights[current_light]->position[2];
 			Draw_Parallel(At);
 			Draw_Meridian(At);
-			Draw_Vector(At, Direction);                                 
+			Draw_Vector(At, Direction);
 			break;
 		case 1:
                          At[0] = LOCAL_MyLights[current_light]->position[0];  
@@ -352,7 +352,7 @@ void display(void){
                          Draw_Meridian(At);
                          glTranslatef(At[0],At[1],At[2]);                     
                          glColor3f(1.0,0.0,0.0);                              
-                         glutSolidSphere(0.05,28,28);                         
+                         glutSolidSphere(10.,28,28);                         
                          break;
 		case 2:
                         At[0] = LOCAL_MyLights[current_light]->position[0];            
@@ -367,55 +367,67 @@ void display(void){
                         Draw_Vector(At, Direction);                                    
                         Draw_Sphere_Spot(At, Direction);                               
                         glTranslatef(At[0],At[1],At[2]);                               
-                        glutSolidSphere(0.05,28,28);                                   
+                        glutSolidSphere(10,28,28);                                   
                         break;
 		default:
 			break;
 	}
-	glPopMatrix();
-	glutSwapBuffers();
 }
 
 void myDisplay(void){
 	inmove=false;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_BLENT_BUFFER_BIT);
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
-	glLoadIdentity();
+	//glLoadIdentity();
 	//dibujar escenario Menu o Game
-	glLoadIdentity();
-	SetLight( LOCAL_MyLights[0] );
+	//glLoadIdentity();
+	/*SetLight( LOCAL_MyLights[0] );
 	SetLight( LOCAL_MyLights[1] );
 	SetLight( LOCAL_MyLights[2] );
-	glPushMatrix();
+	glPushMatrix();*/
 	loadCamera();
+	SetLight( LOCAL_MyLights[0] );
+	SetLight( LOCAL_MyLights[1] );
 	draw_hands();
 	//glEnable(GL_BLEND);
+	std::cout << "pase1" << std::endl;
 	if(game){
 		//initTopo();
+		std::cout << "pase4" << std::endl;
 		if(gameBackup!=game){
+			MiCamara->rotate_c=0;
 			initTopo();
 			//topoo=!topoo;
 			createTopos();
 		}
 		gameBackup=game;
 		draw_sceneGame();
+		std::cout << "pase5" << std::endl;
 	} else {
-		if(topooBackup!=topoo){
-			createTopos(1,400,200);
+		if(gameBackup!=game || topooBackup!=topoo){
+			initTopo();
+			createTopos(1,400,200,250);
 			createBottoms();
 		}
 		gameBackup=game;
+		topooBackup=topoo;
 		draw_sceneMenu();
 	}
+	std::cout << "pase2" << std::endl;
 	//Escenario
 	//glDisable(GL_DEPTH_TEST);
 	draw_scene();
+	std::cout << "pase3" << std::endl;
+	glPushMatrix();
 	display();
+	std::cout << "pase6" << std::endl;
+	glPopMatrix();
+	glutSwapBuffers();
 	//glDisable(GL_BLEND);
 	//glEnable(GL_DEPTH_TEST);
+	//glPopMatrix();
 	glFlush();
-	glutSwapBuffers();
 }
 
 void lightVariables(){
@@ -424,9 +436,9 @@ void lightVariables(){
 	LOCAL_MyLights[0] = CreateDefaultLight();
 	LOCAL_MyLights[0]->type = AGA_DIRECTIONAL;
 	LOCAL_MyLights[0]->id = GL_LIGHT0;
-	LOCAL_MyLights[0]->position[0] = 1.0f;
-	LOCAL_MyLights[0]->position[1] = 1.0f;
-	LOCAL_MyLights[0]->position[2] = 1.0f;
+	LOCAL_MyLights[0]->position[0] = 200.0f;
+	LOCAL_MyLights[0]->position[1] = 200.0f;
+	LOCAL_MyLights[0]->position[2] = 200.0f;
 	LOCAL_MyLights[0]->position[3] = 0.0f;
 	LOCAL_MyLights[0]->pointAtInfinity[0] = LOCAL_MyLights[0]->position[0];
 	LOCAL_MyLights[0]->pointAtInfinity[1] = LOCAL_MyLights[0]->position[1];
@@ -435,20 +447,20 @@ void lightVariables(){
 	LOCAL_MyLights[1] = CreateDefaultLight();
 	LOCAL_MyLights[1]->type = AGA_POSITIONAL;
 	LOCAL_MyLights[1]->id = GL_LIGHT1;
-	LOCAL_MyLights[1]->position[0] = 1.0f;
-	LOCAL_MyLights[1]->position[1] = 1.0f;
-	LOCAL_MyLights[1]->position[2] = -1.0f;
+	LOCAL_MyLights[1]->position[0] = 200.0f;
+	LOCAL_MyLights[1]->position[1] = 200.0f;
+	LOCAL_MyLights[1]->position[2] = -200.0f;
 	LOCAL_MyLights[1]->position[3] = 1.0f;
 	//SPOT
 	LOCAL_MyLights[2] = CreateDefaultLight();
 	LOCAL_MyLights[2]->type = AGA_SPOT;
 	LOCAL_MyLights[2]->id = GL_LIGHT2;
-	LOCAL_MyLights[2]->position[0] = -1.0f;     
-	LOCAL_MyLights[2]->position[1] = 1.0f;
-	LOCAL_MyLights[2]->position[2] = 1.0f;
-	LOCAL_MyLights[2]->spotDirection[0] = 1.0f; 
-	LOCAL_MyLights[2]->spotDirection[1] = -1.0f;
-	LOCAL_MyLights[2]->spotDirection[2] = -1.0f;
+	LOCAL_MyLights[2]->position[0] = -200.0f;     
+	LOCAL_MyLights[2]->position[1] = 200.0f;
+	LOCAL_MyLights[2]->position[2] = 200.0f;
+	LOCAL_MyLights[2]->spotDirection[0] = 200.0f; 
+	LOCAL_MyLights[2]->spotDirection[1] = -200.0f;
+	LOCAL_MyLights[2]->spotDirection[2] = -200.0f;
 }
 
 void reshape(int width, int height) {
@@ -459,6 +471,7 @@ void reshape(int width, int height) {
 int main(int argc, char **argv){
 	controller.addListener(listener);
 	glutInit(&argc, argv);
+	MiCamara = new class Camara();
 	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB|GLUT_DEPTH);
 	glutInitWindowSize(500, 500);
 	glutInitWindowPosition(0, 0);
@@ -466,7 +479,7 @@ int main(int argc, char **argv){
 	glutDisplayFunc(myDisplay);
 	glutReshapeFunc(reshape);
 	glutSpecialFunc(specialKeys);
-	glutMouseFunc(mouse);
+	//glutMouseFunc(mouse);
 	glutIdleFunc(idle);
 	glutMotionFunc(NULL);
 	glutPassiveMotionFunc(MouseMotion);

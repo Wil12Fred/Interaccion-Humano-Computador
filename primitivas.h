@@ -54,7 +54,7 @@ bool loadTexture(std::string texture_file){
 	int *height=new int;
 	GLuint texture=png_texture_load(texture_file.c_str(),width,height);
 	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glBindTexture(GL_TEXTURE_2D, texture);
 	return true;
 }
@@ -63,6 +63,7 @@ void draw_loadedMesh(objl::Loader& Loader,int i){
         objl::Mesh* curMesh = &Loader.LoadedMeshes[i];
 	bool existTexture=false;
 	if(loadTexture(curMesh->MeshMaterial.map_Kd)){
+		glColor4f(1.0,1.0,1.0,1.0);
 		existTexture=true;
 		//glDisable(GL_BLEND);
 		//glDepthMask(GL_TRUE);

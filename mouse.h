@@ -1,4 +1,5 @@
 static int old_x, old_y;
+
 void Mouse_Luces(int x, int y){
         float rot_x, rot_y;
         rot_y = (float)(old_y - y);

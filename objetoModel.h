@@ -22,6 +22,7 @@ struct Objeto{
 		useColor=false;
 		intersected=false;
 		invisible=false;
+		prIntersected=true;
 	}
 	Objeto(Model* m,double X,double Y,double Z){
 		model=m;
@@ -29,6 +30,7 @@ struct Objeto{
 		useColor=false;
 		intersected=false;
 		invisible=false;
+		prIntersected=true;
 	}
 	void setMovimiento ( double X, double Y , double Z){
 		Movimiento=objl::Vector3(X,Y,Z);

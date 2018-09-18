@@ -80,7 +80,7 @@ void Draw_Vector(float *At, float *Direction) {
     glTranslatef(vectorX, vectorY, vectorZ);
     glRotatef(beta *RAD_TO_DEGREE, sin(alpha - PI_VALUE / 2.0), 0.0f, cos(alpha - PI_VALUE / 2.0));
     glRotatef(alpha*RAD_TO_DEGREE, 0.0f, 1.0f, 0.0f);
-    glutSolidCone(0.02, 0.1, 28, 28);
+    glutSolidCone(10, 20, 28, 28);
 }
 
 void Draw_Sphere_Spot(float *At, float *Direction) {
