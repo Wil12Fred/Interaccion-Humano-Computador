@@ -1,5 +1,5 @@
 #ESTA COMPILACIÓN ES PARA EL SISTEMA OPERATIVO OS X
-c++ -o main -std=c++11 main.cc -Wno-deprecated -L/System/Library/Frameworks -framework GLUT -framework OpenGL /usr/local/lib/libLeap.dylib /usr/local/lib/libpng.dylib
+c++ -o main -std=c++11 main.cc -I./ -I./Leap -I./Model -Wno-deprecated -framework GLUT -framework OpenGL /usr/local/lib/libLeap.dylib -lpng
 if [ $? -ne 0 ]; then 
 	echo "compilation error"
 else

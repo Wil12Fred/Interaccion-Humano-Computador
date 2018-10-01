@@ -9,12 +9,14 @@ struct Objeto{
 	bool prIntersected;
 	bool invisible;
 	float maxY;
+	double rotate;
 	Objeto(){
 		Movimiento=objl::Vector3(0,0,0);
 		useColor=false;
 		intersected=false;
 		invisible=false;
 		prIntersected=true;
+		rotate=0;
 	}
 	Objeto(Model* m, objl::Vector3 Mov){
 		model=m;
@@ -23,6 +25,7 @@ struct Objeto{
 		intersected=false;
 		invisible=false;
 		prIntersected=true;
+		rotate=0;
 	}
 	Objeto(Model* m,double X,double Y,double Z){
 		model=m;
@@ -31,6 +34,7 @@ struct Objeto{
 		intersected=false;
 		invisible=false;
 		prIntersected=true;
+		rotate=0;
 	}
 	void setMovimiento ( double X, double Y , double Z){
 		Movimiento=objl::Vector3(X,Y,Z);

@@ -518,7 +518,6 @@ static void SpecialKey ( int key, int x, int y ){
 		glutPostRedisplay();
 }
 
-
 int main(int argc, char** argv) {
 	/*bool loadout = Loader.LoadFile("model.obj");
 	if(!loadout){

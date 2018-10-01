@@ -126,7 +126,7 @@ void Camara::SetDependentParametersCamera() {
 	camI=objl::Vector3(ix,iy,iz);
 	camJ=objl::Vector3(jx,jy,jz);
 	//std::cout << "up-> " << jx << " " << jy << " " << jz << std::endl;
-	//camUp=camJ;//objl::Vector3(jx, jy, jz);
+	camUp=camJ;//objl::Vector3(jx, jy, jz);
 }
 
 void Camara::SetGLCamera() {
@@ -150,9 +150,9 @@ void Camara::SetGLCamera() {
 }
 
 void Camara::SetCamera(
-        float viewX, float viewY, float viewZ,
-        float atX, float atY, float atZ,
-        float upX, float upY, float upZ) {
+        float viewX, float viewY, float viewZ,//0, 300, 250
+        float atX, float atY, float atZ,// 0, -300, -250
+        float upX, float upY, float upZ) {//0 1 0
 	camView=objl::Vector3(viewX,viewY,viewZ);
 	camAt=objl::Vector3(atX,atY,atZ);
 	camUp=objl::Vector3(upX,upY,upZ);
