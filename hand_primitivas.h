@@ -36,14 +36,14 @@ void draw_hand(Hand& hand){
 	//glColor4f(0.0,0.0,0,0.1);
 	//draw_sphere(SphereCenter,(SphereCenter-getPos(Palm)).norm());
 	double ratio= (SphereCenter-getPos(Palm)).norm();
-	if(ratio<40){
+	/*if(ratio<40){
 		printf("puño\n");
 	} else {
 		//std::cout << ratio << std::endl;
 	}
 	if (ratio>100){
 		printf("palma\n");
-	}
+	}*/
         FingerList fingers = hand.fingers();
         for (FingerList::const_iterator fl = fingers.begin(); fl != fingers.end(); ++fl) {
                 Finger finger = *fl;

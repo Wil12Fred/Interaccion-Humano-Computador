@@ -151,6 +151,7 @@ void initVariables(){
 	MiCamara->camAperture=130 * DEGREE_TO_RAD;
 	MiCamara->camNear = 1;
 	MiCamara->camFar = 2000;
+	SwitchLight( LOCAL_MyLights[0], TRUE);
 }
 
 void initGlVariables(){
@@ -169,7 +170,6 @@ void myInit() {
 	initLightVariables();
 	initVariables();
 	initGlVariables();
-	SwitchLight( LOCAL_MyLights[0], TRUE);
 }
 
 void specialKeys(int key, int x, int y){
@@ -286,11 +286,14 @@ void draw_bottoms(){
 	double max=(Bottoms[0].model->max.Y+Bottoms[0].model->min.Y)/2;
 	if(Bottoms[0].intersected && Bottoms[0].maxY<=max){
 		topoo=!topoo;
+		std::cout << "00000000" << std::endl;
 	}
 	if(Bottoms[1].intersected && Bottoms[1].maxY<=max){
 		game=!game;
+		std::cout << "1111y000" << std::endl;
 	}
 	if(Bottoms[2].intersected && Bottoms[2].maxY<=max){
+		std::cout << "2r12:000" << std::endl;
 		current_light=0;
 		//delete MiCamara;
 		//exit(0);
@@ -363,7 +366,7 @@ void draw_sceneGame(){
 			for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
 				Hand hand = *hl;
 				//if(isPuno(hand)){
-					getLeapArticulationPoints(Articulation_Points,hand.isRight());
+					getArticulationPoints(Articulation_Points,hand.isRight());
 					Topos[i].intersecta(Articulation_Points);
 					if(Topos[i].intersected){
 						if (Topos[i].maxY<=(Topos[i].model->max.Y+Topos[i].model->min.Y)/2){
@@ -381,9 +384,7 @@ void draw_sceneGame(){
 }
 
 void idle(void){
-	//std::cout << "repase1" << std::endl;
 	if( topoo!=topooBackup || gameBackup!=game/*  || inmove*/){
-		//std::cout << "repase2" << std::endl;
 		glutPostRedisplay();
 	} else if (NEWHAND) {
 		glutPostRedisplay();
@@ -434,33 +435,40 @@ bool draw_scene(){
 			Vector palmNormal = hand.palmNormal();
 			//objl::Vector3 Palm = (objl::Vector3(palmPosition.x, palmPosition.y, palmPosition.z));
 			objl::Vector3 PalmNormal= objl::Vector3(palmNormal.x,palmNormal.y,palmNormal.z);
-			if(hand.isLeft()){// && isPalm(hand)){
-				
-				if(leftC.check_intersection(HandPoints)){
-					imove=true;
-					MiCamara->rotate_c-=0.3;
+			if(isPalm(hand)){
+				if(hand.isLeft()){// && isPalm(hand)){
 					
-					//glColor4f(1.0,0.1,0.1,0.3);
-					//leftC.draw(1);
-					double opac=std::max(float(0.0),float(PalmNormal.X));
-					glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
-					//glColor4f(0.2,0.0,0.0,0.3);
-					//leftC.draw(3);
-					rightC.draw(1);
-				}
-			} else {//if(hand.isRight() && isPalm(hand)){
-				getLeapArticulationPoints(HandPoints,1);
-				if(rightC.check_intersection(HandPoints)){
-					imove=true;
-					MiCamara->rotate_c+=0.3;
-					//glColor4f(1.0,0.1,0.1,0.3);
-					//rightC.draw(1);
-				//} else {
-					//glColor4f(0.2,0.0,0.0,0.3);
-					//rightC.draw(2);
-					double opac=std::max(float(0.0),float(-PalmNormal.X));
-					glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
-					rightC.draw(1);
+					getLeapArticulationPoints(HandPoints,0);
+					if(leftC.check_intersection(HandPoints)){
+						imove=true;
+						
+						//glColor4f(1.0,0.1,0.1,0.3);
+						//leftC.draw(1);
+						double opac=std::max(float(0.0),float(PalmNormal.X));
+						if(opac>0.5){
+							MiCamara->rotate_c-=opac*0.3;
+						}
+						glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
+						//glColor4f(0.2,0.0,0.0,0.3);
+						//leftC.draw(3);
+						leftC.draw(1);
+					}
+				} else {//if(hand.isRight() && isPalm(hand)){
+					getLeapArticulationPoints(HandPoints,1);
+					if(rightC.check_intersection(HandPoints)){
+						imove=true;
+						//glColor4f(1.0,0.1,0.1,0.3);
+						//rightC.draw(1);
+					//} else {
+						//glColor4f(0.2,0.0,0.0,0.3);
+						//rightC.draw(2);
+						double opac=std::max(float(0.0),float(-PalmNormal.X));
+						if(opac>0.5){
+							MiCamara->rotate_c+=opac*0.3;
+						}
+						glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
+						rightC.draw(1);
+					}
 				}
 			}
 		}
@@ -500,10 +508,10 @@ void myDisplay(void){
 	glPushMatrix();*/
 	loadCamera();
 	//SetLight( LOCAL_MyLights[1] );
-	draw_hands();
 	//glEnable(GL_BLEND);
 	//std::cout << "pase1" << std::endl;
 	glPushMatrix();
+		draw_hands();
 		if(game){
 			//initTopo();
 			if(gameBackup!=game){
@@ -521,7 +529,6 @@ void myDisplay(void){
 			//std::cout << "pase5" << std::endl;
 		} else {
 			if(gameBackup!=game || topooBackup!=topoo){
-				//std::cout << "-pase5" << std::endl;
 				initTopo();
 				createTopos(1,400,200,250);
 				createBottoms();
@@ -541,12 +548,13 @@ void myDisplay(void){
 		//std::cout << "+pase6" << std::endl;
 	glPopMatrix();
 	SetLight( LOCAL_MyLights[0] );
-	glutSwapBuffers();
+	//glutSwapBuffers();
 	//glDisable(GL_BLEND);
 	//glEnable(GL_DEPTH_TEST);
 	//glPopMatrix();
 	//glFlush();
-	//NEWHAND=false;
+	NEWHAND=false;
+	glutSwapBuffers();
 	//inmove=imove;
 }
 
@@ -566,7 +574,7 @@ void initGraphics(int& argc, char **argv){
 	glutSpecialFunc(specialKeys);
 	glutIdleFunc(idle);
 	//glutMouseFunc(mouse);
-	glutMotionFunc(NULL);
+	//glutMotionFunc(NULL);
 	//glutPassiveMotionFunc(MouseMotion);
 	myInit();
 }

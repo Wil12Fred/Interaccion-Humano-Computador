@@ -49,7 +49,6 @@ void SampleListener::onExit(const Controller& controller) {
 void SampleListener::onFrame(const Controller& controller) {
   if(!NEWHAND){
 	  // Get the most recent frame and report some basic information
-	  //std::cout << "pase1" << std::endl;
 	  const Frame frame = controller.frame();
 	  //std::cout << "pase2" << std::endl;
 	  /*std::cout << "Frame id: " << frame.id()
