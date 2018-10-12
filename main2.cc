@@ -279,21 +279,27 @@ void createTopos(int n_topos=4,double amp=400, double dist=0, double CY=MiCamara
 	}
 }
 
+std::vector<bool>WasIntersected;
+
 void draw_bottoms(){
 	for (int i=0;i<Bottoms.size();i++){
 		Bottoms[i].draw();
 	}
 	double max=(Bottoms[0].model->max.Y+Bottoms[0].model->min.Y)/2;
-	if(Bottoms[0].intersected && Bottoms[0].maxY<=max){
-		topoo=!topoo;
-		std::cout << "00000000" << std::endl;
+	if(Bottoms[0].intersected){
+		if( Bottoms[0].maxY<=max/* && WasIntersected[0]==0*/){
+			topoo=!topoo;
+			//std::cout << "00000000" << std::endl;
+		} else {
+			//Bottoms[0].intersected=0;
+		}
 	}
-	if(Bottoms[1].intersected && Bottoms[1].maxY<=max){
+	if(Bottoms[1].intersected && Bottoms[1].maxY<=max/* && WasIntersected[1]==0*/){
 		game=!game;
-		std::cout << "1111y000" << std::endl;
+		//std::cout << "1111y000" << std::endl;
 	}
-	if(Bottoms[2].intersected && Bottoms[2].maxY<=max){
-		std::cout << "2r12:000" << std::endl;
+	if(Bottoms[2].intersected && Bottoms[2].maxY<=max/* && WasIntersected[2]==0*/){
+		//std::cout << "2r12:000" << std::endl;
 		current_light=0;
 		//delete MiCamara;
 		//exit(0);
@@ -332,8 +338,11 @@ void draw_sceneMenu(){
 			Bottoms[i].intersected=false;
 		}
 	} else {
+		WasIntersected.resize(Bottoms.size());
 		int tot=0;
 		for (int i=0;i<Bottoms.size();i++){
+			bool wasInter=Bottoms[i].intersected;
+			WasIntersected[i]=wasInter;
 			for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
 				Hand hand = *hl;
 				if(isPuno(hand)){

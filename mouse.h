@@ -6,7 +6,7 @@ void Mouse_Luces(int x, int y){
 		if(current_light>-1){
 			float rot_x, rot_y;
 			rot_y = (float)(y - old_y)*0.2;
-			rot_x = (float)(x - old_x)*0.2;
+			rot_x = (float)(x - old_x)*0.5;
 			if(rot_y==0 && rot_x==0){
 			} else {
 				std::cout << rot_y << " " << rot_x << std::endl;
