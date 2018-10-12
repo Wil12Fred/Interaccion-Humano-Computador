@@ -317,13 +317,19 @@ void draw_sceneMenu(){
 	if(current_light==0){
 		for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
 			Hand hand = *hl;
-			if(hand.isRight()){
-				getArticulationPoints(Articulation_Points,1);
-				Mouse_Luces(Articulation_Points[0].X,Articulation_Points[0].Y);
-				if(isPalm(hand)){
+			if(hand.isRight() ){
+				if (isPuno(hand)){
+					Vector palmPosition = hand.palmPosition();
+					Mouse_Luces(palmPosition.x, palmPosition.y);
+				}
+			} else {
+				if (isPuno(hand)){
 					current_light=-1;
 				}
 			}
+		}
+		for (int i=0;i<Bottoms.size();i++){
+			Bottoms[i].intersected=false;
 		}
 	} else {
 		int tot=0;
@@ -407,67 +413,70 @@ bool draw_scene(){
 	Cube rightC(/*MiCamara->camView.X+*/0,100/*MiCamara->camView.Y/2*/,200,400);
 	std::vector<objl::Vector3> HandPoints;
 	bool imove=false;
-	if  (hands.isEmpty()){
-		/*getLeapArticulationPoints(HandPoints,2);
-		if(leftC.check_intersection(HandPoints)){
-			imove=true;
-			MiCamara->rotate_c-=0.3;
-			glColor4f(1.0,0.1,0.1,0.3);
-			leftC.draw(1);
-		} else {
-			glColor4f(0.2,0.0,0.0,0.3);
-			leftC.draw(3);
-		}
-		if(rightC.check_intersection(HandPoints)){
-			imove=true;
-			MiCamara->rotate_c+=0.3;
-			glColor4f(1.0,0.1,0.1,0.3);
-			rightC.draw(1);
-		} else {
-			glColor4f(0.2,0.0,0.0,0.3);
-			rightC.draw(2);
-		}*/
+	if(current_light==0){
 	} else {
-		for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
-			Hand hand = *hl;
-			getLeapArticulationPoints(HandPoints,hand.isRight());
-			Vector palmPosition = hand.palmPosition();
-			Vector palmNormal = hand.palmNormal();
-			//objl::Vector3 Palm = (objl::Vector3(palmPosition.x, palmPosition.y, palmPosition.z));
-			objl::Vector3 PalmNormal= objl::Vector3(palmNormal.x,palmNormal.y,palmNormal.z);
-			if(isPalm(hand)){
-				if(hand.isLeft()){// && isPalm(hand)){
-					
-					getLeapArticulationPoints(HandPoints,0);
-					if(leftC.check_intersection(HandPoints)){
-						imove=true;
+		if  (hands.isEmpty()){
+			/*getLeapArticulationPoints(HandPoints,2);
+			if(leftC.check_intersection(HandPoints)){
+				imove=true;
+				MiCamara->rotate_c-=0.3;
+				glColor4f(1.0,0.1,0.1,0.3);
+				leftC.draw(1);
+			} else {
+				glColor4f(0.2,0.0,0.0,0.3);
+				leftC.draw(3);
+			}
+			if(rightC.check_intersection(HandPoints)){
+				imove=true;
+				MiCamara->rotate_c+=0.3;
+				glColor4f(1.0,0.1,0.1,0.3);
+				rightC.draw(1);
+			} else {
+				glColor4f(0.2,0.0,0.0,0.3);
+				rightC.draw(2);
+			}*/
+		} else {
+			for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+				Hand hand = *hl;
+				getLeapArticulationPoints(HandPoints,hand.isRight());
+				Vector palmPosition = hand.palmPosition();
+				Vector palmNormal = hand.palmNormal();
+				//objl::Vector3 Palm = (objl::Vector3(palmPosition.x, palmPosition.y, palmPosition.z));
+				objl::Vector3 PalmNormal= objl::Vector3(palmNormal.x,palmNormal.y,palmNormal.z);
+				if(isPalm(hand)){
+					if(hand.isLeft()){// && isPalm(hand)){
 						
-						//glColor4f(1.0,0.1,0.1,0.3);
-						//leftC.draw(1);
-						double opac=std::max(float(0.0),float(PalmNormal.X));
-						if(opac>0.5){
-							MiCamara->rotate_c-=opac*0.3;
+						getLeapArticulationPoints(HandPoints,0);
+						if(leftC.check_intersection(HandPoints)){
+							imove=true;
+							
+							//glColor4f(1.0,0.1,0.1,0.3);
+							//leftC.draw(1);
+							double opac=std::max(float(0.0),float(PalmNormal.X));
+							if(opac>0.5){
+								MiCamara->rotate_c-=opac*0.3;
+							}
+							glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
+							//glColor4f(0.2,0.0,0.0,0.3);
+							//leftC.draw(3);
+							leftC.draw(1);
 						}
-						glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
-						//glColor4f(0.2,0.0,0.0,0.3);
-						//leftC.draw(3);
-						leftC.draw(1);
-					}
-				} else {//if(hand.isRight() && isPalm(hand)){
-					getLeapArticulationPoints(HandPoints,1);
-					if(rightC.check_intersection(HandPoints)){
-						imove=true;
-						//glColor4f(1.0,0.1,0.1,0.3);
-						//rightC.draw(1);
-					//} else {
-						//glColor4f(0.2,0.0,0.0,0.3);
-						//rightC.draw(2);
-						double opac=std::max(float(0.0),float(-PalmNormal.X));
-						if(opac>0.5){
-							MiCamara->rotate_c+=opac*0.3;
+					} else {//if(hand.isRight() && isPalm(hand)){
+						getLeapArticulationPoints(HandPoints,1);
+						if(rightC.check_intersection(HandPoints)){
+							imove=true;
+							//glColor4f(1.0,0.1,0.1,0.3);
+							//rightC.draw(1);
+						//} else {
+							//glColor4f(0.2,0.0,0.0,0.3);
+							//rightC.draw(2);
+							double opac=std::max(float(0.0),float(-PalmNormal.X));
+							if(opac>0.5){
+								MiCamara->rotate_c+=opac*0.3;
+							}
+							glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
+							rightC.draw(1);
 						}
-						glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
-						rightC.draw(1);
 					}
 				}
 			}
