@@ -26,7 +26,7 @@ void draw_triangle(objl::Vector3 v1, objl::Vector3 v2, objl::Vector3 v3){
 void draw_sphere(objl::Vector3 Center, double size){
 	glTranslatef(Center.X,Center.Y,Center.Z);
 	glPushMatrix();
-	glutSolidSphere(size,28,28);
+		glutSolidSphere(size,28,28);
 	glPopMatrix();
 	glTranslatef(-Center.X,-Center.Y,-Center.Z);
 }
@@ -54,14 +54,24 @@ void draw_line(objl::Vertex v1, objl::Vertex v2, double width=2.5) {
 
 void draw_triangle(objl::Vertex v1, objl::Vertex v2, objl::Vertex v3, bool texture=false){
 	if(!texture){
-		draw_triangle(v1.Position, v2.Position, v3.Position);
+		glBegin(GL_TRIANGLES);
+			glNormal3f(v1.Normal.X,v1.Normal.Y,v1.Normal.Z);
+			glVertex3f(v1.Position.X, v1.Position.Y, v1.Position.Z);
+			glNormal3f(v2.Normal.X,v2.Normal.Y,v2.Normal.Z);
+			glVertex3f(v2.Position.X, v2.Position.Y, v2.Position.Z);
+			glNormal3f(v3.Normal.X,v3.Normal.Y,v3.Normal.Z);
+			glVertex3f(v3.Position.X, v3.Position.Y, v3.Position.Z);
+		glEnd();
 		return;
 	}
 	glBegin(GL_TRIANGLES);
+		glNormal3f(v1.Normal.X,v1.Normal.Y,v1.Normal.Z);
 		glTexCoord2f(v1.TextureCoordinate.X, v1.TextureCoordinate.Y);
 		glVertex3f(v1.Position.X, v1.Position.Y, v1.Position.Z);
+		glNormal3f(v2.Normal.X,v2.Normal.Y,v2.Normal.Z);
 		glTexCoord2f(v2.TextureCoordinate.X, v2.TextureCoordinate.Y);
 		glVertex3f(v2.Position.X, v2.Position.Y, v2.Position.Z);
+		glNormal3f(v3.Normal.X,v3.Normal.Y,v3.Normal.Z);
 		glTexCoord2f(v3.TextureCoordinate.X, v3.TextureCoordinate.Y);
 		glVertex3f(v3.Position.X, v3.Position.Y, v3.Position.Z);
 	glEnd();

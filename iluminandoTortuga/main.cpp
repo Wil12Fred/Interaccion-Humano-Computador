@@ -527,6 +527,7 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	// Colocamos la cámara en (0,1,-3) mirando hacia (0,0,0)
 	MiCamara = new Camara(0.0f, 1.0f, -3.0f);
+	//MiCamara = new Camara(0.0f, 1.0f, -3.0f);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitWindowSize(512, 512);
 	glutInitWindowPosition(20, 20);

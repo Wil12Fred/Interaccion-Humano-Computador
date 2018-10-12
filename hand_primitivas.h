@@ -33,13 +33,13 @@ void draw_hand(Hand& hand){
 	PalmNormal=PalmNormal*50;
 	glColor3f(0.0,0.0,0);
 	draw_line(getPos(Palm),getPos(Palm+PalmNormal));
-	glColor4f(0.0,0.0,0,0.1);
-	draw_sphere(SphereCenter,(SphereCenter-getPos(Palm)).norm());
+	//glColor4f(0.0,0.0,0,0.1);
+	//draw_sphere(SphereCenter,(SphereCenter-getPos(Palm)).norm());
 	double ratio= (SphereCenter-getPos(Palm)).norm();
 	if(ratio<40){
 		printf("puño\n");
 	} else {
-		std::cout << ratio << std::endl;
+		//std::cout << ratio << std::endl;
 	}
 	if (ratio>100){
 		printf("palma\n");
@@ -56,6 +56,7 @@ void draw_hands(){
 	glPointSize(2);
 	if(hands.count()==0){
 		glColor3f(1.0,1.0,0);
+		draw_sphere(getPos(objl::Vector3(-41.913-rotate_y,102.057+rotate_x,138.329+rotate_z)),15.0);
 		glBegin(GL_LINES);
 			draw_line(getPos(objl::Vector3(-41.913-rotate_y,102.057+rotate_x,138.329+rotate_z)),getPos(objl::Vector3(-41.913-rotate_y,102.057+rotate_x,138.329+rotate_z)));
 			draw_line(getPos(objl::Vector3(-41.913-rotate_y,102.057+rotate_x,138.329+rotate_z)),getPos(objl::Vector3(-15.3823-rotate_y,127.651+rotate_x,115.778+rotate_z)));
@@ -138,7 +139,7 @@ bool isPuno(Hand hand){
 	objl::Vector3 Palm = (objl::Vector3(palmPosition.x, palmPosition.y, palmPosition.z));
 	objl::Vector3 SphereCenter = objl::Vector3(sphereCenter.x,sphereCenter.y,sphereCenter.z);
 	double ratio=(SphereCenter-Palm).norm();
-	if(ratio<40)
+	if(ratio<45)
 		return true;
 	return false;
 }
@@ -149,9 +150,42 @@ bool isPalm(Hand hand){
 	objl::Vector3 Palm = (objl::Vector3(palmPosition.x, palmPosition.y, palmPosition.z));
 	objl::Vector3 SphereCenter = objl::Vector3(sphereCenter.x,sphereCenter.y,sphereCenter.z);
 	double ratio=(SphereCenter-Palm).norm();
-	if(ratio>100)
+	if(ratio>90)
 		return true;
 	return false;
+}
+
+bool handIsUp(Hand hand){
+	Vector palmPosition = hand.palmPosition();
+	Vector palmNormal = hand.palmNormal();
+	objl::Vector3 Palm = (objl::Vector3(palmPosition.x, palmPosition.y, palmPosition.z));
+	objl::Vector3 PalmNormal= objl::Vector3(palmNormal.x,palmNormal.y,palmNormal.z);
+	return (PalmNormal.Y-Palm.Y)>0.7;
+}
+
+bool handIsDown(Hand hand){
+	Vector palmPosition = hand.palmPosition();
+	Vector palmNormal = hand.palmNormal();
+	objl::Vector3 Palm = (objl::Vector3(palmPosition.x, palmPosition.y, palmPosition.z));
+	objl::Vector3 PalmNormal= objl::Vector3(palmNormal.x,palmNormal.y,palmNormal.z);
+	return (-PalmNormal.Y+Palm.Y)>0.7;
+}
+
+bool handIsLeft(Hand hand){
+	Vector palmPosition = hand.palmPosition();
+	Vector palmNormal = hand.palmNormal();
+	objl::Vector3 Palm = (objl::Vector3(palmPosition.x, palmPosition.y, palmPosition.z));
+	objl::Vector3 PalmNormal= objl::Vector3(palmNormal.x,palmNormal.y,palmNormal.z);
+	std::cout << PalmNormal.X << std::endl;
+	return (PalmNormal.X)>0.7;
+}
+
+bool handIsRight(Hand hand){
+	Vector palmPosition = hand.palmPosition();
+	Vector palmNormal = hand.palmNormal();
+	objl::Vector3 Palm = (objl::Vector3(palmPosition.x, palmPosition.y, palmPosition.z));
+	objl::Vector3 PalmNormal= objl::Vector3(palmNormal.x,palmNormal.y,palmNormal.z);
+	return (-PalmNormal.X)>0.7;
 }
 
 void getLeapArticulationPoints(std::vector<objl::Vector3>& AP, int handId=2){
@@ -248,7 +282,8 @@ void Cube::draw(int cara=0){
 void Cube::draw2(int cara=0){
 	objl::Vector3 vertex;
 	if(cara==0){
-        glBegin(GL_POLYGON);
+        glBegin(GL_QUADS);
+		glNormal3f(0.0, 1.0, 0.0);
 		vertex=objl::Vector3(trans_x,trans_y,trans_z);
 		glVertex3f(vertex.X,vertex.Y,vertex.Z);
 		vertex=objl::Vector3(trans_x+esc,trans_y,trans_z);
@@ -260,7 +295,7 @@ void Cube::draw2(int cara=0){
         glEnd();
 	}
 	if(cara==1){
-        glBegin(GL_POLYGON);
+        glBegin(GL_QUADS);
                 vertex=objl::Vector3(trans_x,trans_y,trans_z-esc);
 		glVertex3f(vertex.X,vertex.Y,vertex.Z);
                 vertex=objl::Vector3(trans_x+esc,trans_y,trans_z-esc);
@@ -272,7 +307,7 @@ void Cube::draw2(int cara=0){
         glEnd();
 	}
 	if(cara==2){
-        glBegin(GL_POLYGON);
+        glBegin(GL_QUADS);
                 vertex=objl::Vector3(trans_x,trans_y,trans_z);
 		glVertex3f(vertex.X,vertex.Y,vertex.Z);
                 vertex=objl::Vector3(trans_x,trans_y,trans_z-esc);
@@ -284,7 +319,7 @@ void Cube::draw2(int cara=0){
         glEnd();
 	}
 	if(cara==3){
-        glBegin(GL_POLYGON);
+        glBegin(GL_QUADS);
                 vertex=objl::Vector3(trans_x+esc,trans_y,trans_z);
 		glVertex3f(vertex.X,vertex.Y,vertex.Z);
                 vertex=objl::Vector3(trans_x+esc,trans_y,trans_z-esc);

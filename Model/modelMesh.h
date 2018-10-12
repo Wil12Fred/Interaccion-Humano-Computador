@@ -47,10 +47,11 @@ struct Model{
 		objl::Vector3 max_local,min_local;
 		objl::Mesh* curMesh=&formatObj.LoadedMeshes[i];
 		int nv=curMesh->Vertices.size();
-		if(nv>0){
-			min_local=curMesh->Vertices[0].Position;
-			max_local=curMesh->Vertices[0].Position;
+		if(nv==0){
+			return;
 		}
+		min_local=curMesh->Vertices[0].Position;
+		max_local=curMesh->Vertices[0].Position;
 		for (int j=1;j<nv;j++){
 			objl::Vertex* curVertex=&(curMesh->Vertices[j]);
 			min_local=min_local.min(curVertex->Position);
@@ -144,7 +145,7 @@ struct Model{
 	void moveToCenter(){
 		if(hasLimits){
 			toCenter=objl::Vector3(-(max.X+min.X)/2,
-						-(max.Y+min.Y)/2,
+						-min.Y,//(max.Y+min.Y)/2,
 						-(max.Z+min.Z)/2);
 			for (int i=0;i<formatObj.LoadedMeshes.size();i++){
 				objl::Mesh* curMesh=&formatObj.LoadedMeshes[i];

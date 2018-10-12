@@ -138,9 +138,14 @@ void SwitchLight( light *thisLight, int status ) {
 void SetLight( light *thisLight ) {
 	int lightId;
 	if( !thisLight ) return;
-	if( !thisLight->switched ) return;
+	if( !thisLight->switched ){
+		glDisable( thisLight->id );
+		 return;
+	}
+	glEnable( thisLight->id );
 	if( thisLight->id < GL_LIGHT0 ) return;
 	lightId = thisLight->id;
+	//std::cout << lightId << std::endl;
 	// Geometric parameters will be always set when the scene is redrawn
 	if( thisLight->type == AGA_DIRECTIONAL ) {
 		glLightfv( lightId, GL_POSITION, thisLight->pointAtInfinity );
@@ -150,6 +155,7 @@ void SetLight( light *thisLight ) {
 		glLightfv( lightId, GL_POSITION, thisLight->position );
 		glLightfv( lightId, GL_SPOT_DIRECTION, thisLight->spotDirection );
 	}
+		//std::cout << thisLight->position[0] << " " << thisLight->position[1] << " " << thisLight->position[2] << std::endl;
 	if( thisLight->needsUpdate ) {
 		thisLight->needsUpdate = FALSE;
 		glLightfv( lightId, GL_AMBIENT, thisLight->ambient );
@@ -158,8 +164,7 @@ void SetLight( light *thisLight ) {
 		if( thisLight->type == AGA_SPOT ) {
 			glLightf( lightId, GL_SPOT_EXPONENT, thisLight->spotExponent );
 			glLightf( lightId, GL_SPOT_CUTOFF, thisLight->spotCutOff );
-		}
-		else {
+		} else {
 			glLighti( lightId, GL_SPOT_EXPONENT, 0 );
 			glLighti( lightId, GL_SPOT_CUTOFF, 180 );
 		}
@@ -167,8 +172,7 @@ void SetLight( light *thisLight ) {
 			glLighti( lightId, GL_CONSTANT_ATTENUATION, 1 );
 			glLighti( lightId, GL_LINEAR_ATTENUATION, 0 );
 			glLighti( lightId, GL_QUADRATIC_ATTENUATION, 0 );
-		}
-		else {
+		} else {
 			glLightf( lightId, GL_CONSTANT_ATTENUATION, thisLight->c );
 			glLightf( lightId, GL_LINEAR_ATTENUATION, thisLight->b );
 			glLightf( lightId, GL_QUADRATIC_ATTENUATION, thisLight->a );
@@ -237,4 +241,3 @@ void Rotar_Spot_Longitud( light *thisLight, float inc ) {
 	thisLight->spotDirection[0] = vIn[0];
 	thisLight->spotDirection[2] = vIn[2];
 }
-

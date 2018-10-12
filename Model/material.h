@@ -4,7 +4,7 @@
 //	is needed and used for the OBJ Model Loader
 namespace objl
 {
-
+	
 	struct Material
 	{
 		Material()
@@ -15,7 +15,7 @@ namespace objl
 			d = 0.0f;
 			illum = 0;
 		}
-
+		//
 		// Material Name
 		std::string name;
 		// Ambient Color
