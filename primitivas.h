@@ -77,12 +77,14 @@ void draw_triangle(objl::Vertex v1, objl::Vertex v2, objl::Vertex v3, bool textu
 	glEnd();
 }
 
-void draw_mesh(objl::Mesh* curMesh){
+void draw_mesh(objl::Mesh* curMesh, bool withTexture=true){
 	bool existTexture=false;
-	if(loadTexture(curMesh->MeshMaterial.map_Kd)){
-		glColor4f(1.0,1.0,1.0,1.0);
-		existTexture=true;
-		//glDisable(GL_BLEND);//glDepthMask(GL_TRUE);
+	if(withTexture){
+		if(loadTexture(curMesh->MeshMaterial.map_Kd)){
+			glColor4f(1.0,1.0,1.0,1.0);
+			existTexture=true;
+			//glDisable(GL_BLEND);//glDepthMask(GL_TRUE);
+		}
 	}
         for (int j=0;j<curMesh->Indices.size();j+=3){
 		draw_triangle(curMesh->Vertices[curMesh->Indices[j]],

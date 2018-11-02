@@ -159,7 +159,7 @@ struct Model{
 		}
 	}
 
-	void draw(){
+	void draw(bool withTexture=true){
 		if(!isLoaded){
 			bool loadout = isLoaded = formatObj.LoadFile(fileObj);
 			if(!loadout){
@@ -172,7 +172,7 @@ struct Model{
 				objl::Vector3 color=formatObj.LoadedMeshes[*it].defaultColor;
 				glColor4f(color.X, color.Y, color.Z,0.9);
 			}
-			draw_mesh(&formatObj.LoadedMeshes[*it]);
+			draw_mesh(&formatObj.LoadedMeshes[*it],withTexture);
 		}
 	}
 };

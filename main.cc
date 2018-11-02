@@ -78,8 +78,8 @@ Model* Topo;
 
 void initDiglet(){
 	Topo=new Model("Diglett.obj",50);
-	Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
-	Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
+	Topo->addMesh(0);Topo->addColor(0,1.0,0.0,0.0);
+	Topo->addMesh(1);Topo->addColor(1,0.0,0.0,0.0);
 	Topo->moveToCenter();
 	Topo->useColor=true;
 	Topo->solid();
@@ -88,8 +88,8 @@ void initDiglet(){
 void initTopo(){
 	if(topoo){
 		Topo=new Model("Topo.obj",120);
-		Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
-		Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
+		Topo->addMesh(0);Topo->addColor(0,1.0,0.0,0.0);
+		Topo->addMesh(1);Topo->addColor(1,0.0,0.0,0.0);
 		Topo->moveToCenter();
 		Topo->useColor=true;
 		Topo->solid();
@@ -196,35 +196,9 @@ void specialKeys(int key, int x, int y){
 	} else if (key == GLUT_KEY_F7){
 		MiCamara->ZoomOut();
 	} else if (key == GLUT_KEY_F8){
-		/*if (current_mode != 0 && current_mode != 7){
-		} else {
-			current_mode = 7;
-			if (current_light == -1) glutPassiveMotionFunc(Mouse_Luces);
-			if (current_light != 2) current_light++;                    
-			else current_light = 0;
-			printf("Luz actual = %d\n",current_light);                  
-		}*/
-		//break;
+		topoo=!topoo;
 	} else if(key==GLUT_KEY_F9){
-		/*if (current_light != -1) {
-			if ( LOCAL_MyLights[current_light]->switched ){
-				SwitchLight( LOCAL_MyLights[current_light], FALSE);
-			} else {
-				SwitchLight( LOCAL_MyLights[current_light], TRUE);
-			}
-		}*/
-		//break;
 	} else if (key==GLUT_KEY_F10){
-		/*if (current_light == 2){
-			if ( spot_move == 0 ){
-				glutPassiveMotionFunc(Mouse_Spot);
-				spot_move = 1;
-			}else{
-				glutPassiveMotionFunc(Mouse_Luces);
-				spot_move = 0;
-			}
-		}*/
-		//break;
 	}
 	glutPostRedisplay();
 }
@@ -278,26 +252,30 @@ void createTopos(int n_topos=4,double amp=400, double dist=0, double CY=MiCamara
 	}
 }
 
-std::vector<bool>WasIntersected;
+//std::vector<bool>WasIntersected;
 
 void draw_bottoms(){
 	for (int i=0;i<Bottoms.size();i++){
-		Bottoms[i].draw();
+		//if(!Bottoms[i].invisible){
+			Bottoms[i].draw();
+		//} else {
+		//	Topos[i].draw(true);
+		//}
 	}
-	double max=(Bottoms[0].model->max.Y+Bottoms[0].model->min.Y)/2;
+	//double max=(Bottoms[0].model->max.Y+Bottoms[0].model->min.Y)/2;
 	if(Bottoms[0].intersected){
-		if( Bottoms[0].maxY<=max/* && WasIntersected[0]==0*/){
+		//if( Bottoms[0].maxY<=max/* && WasIntersected[0]==0*/){
 			topoo=!topoo;
 			//std::cout << "00000000" << std::endl;
-		} else {
+		//} else {
 			//Bottoms[0].intersected=0;
-		}
+		//}
 	}
-	if(Bottoms[1].intersected && Bottoms[1].maxY<=max/* && WasIntersected[1]==0*/){
+	if(Bottoms[1].intersected){// && Bottoms[1].maxY<=max/* && WasIntersected[1]==0*/){
 		game=!game;
 		//std::cout << "1111y000" << std::endl;
 	}
-	if(Bottoms[2].intersected && Bottoms[2].maxY<=max/* && WasIntersected[2]==0*/){
+	if(Bottoms[2].intersected){// && Bottoms[2].maxY<=max/* && WasIntersected[2]==0*/){
 		//std::cout << "2r12:000" << std::endl;
 		current_light=0;
 		//delete MiCamara;
@@ -311,48 +289,93 @@ bool draw_topos(){
 		if(!Topos[i].invisible){
 			existTopos=true;
 			Topos[i].draw();
+		} else {
+			//Topos[i].maxY=(Topos[i].model->min.Y+Topos[i].model->max.Y)/2;
+			Topos[i].draw(true, false);
 		}
 	}
 	return existTopos;
 }
 
-void draw_sceneMenu(){
-	//std::cout << "***pase5" << std::endl;
-	//std::cout << "**/pase5" << std::endl;
-	if(current_light==0){
+void draw_iluminationMode(){
+	for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+		Hand hand = *hl;
+		if(hand.isRight() ){
+			if (isPuno(hand)){
+				Vector palmPosition = hand.palmPosition();
+				Mouse_Luces(palmPosition.x, palmPosition.y);
+			}
+		} else {
+			if (isPuno(hand)){
+				current_light=-1;
+			}
+		}
+	}
+}
+
+int draw_selectionMode(){
+	//WasIntersected.resize(Bottoms.size());
+	int tot=0;
+	for (int i=0;i<Bottoms.size();i++){
+		bool isInvisible=Bottoms[i].invisible;
+		//bool wasInter=Bottoms[i].intersected;
+		//WasIntersected[i]=wasInter;
+		//bool wasInter=false;
+		bool inters=false;
 		for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
 			Hand hand = *hl;
-			if(hand.isRight() ){
-				if (isPuno(hand)){
-					Vector palmPosition = hand.palmPosition();
-					Mouse_Luces(palmPosition.x, palmPosition.y);
-				}
-			} else {
-				if (isPuno(hand)){
-					current_light=-1;
+			if(isPuno(hand)){
+				getArticulationPoints(Articulation_Points,hand.isRight());
+				Bottoms[i].intersecta(Articulation_Points);
+				if(Bottoms[i].intersected){
+					inters=true;
+					if(!isInvisible){
+						if(Bottoms[i].maxY<=(Bottoms[i].model->max.Y+Bottoms[i].model->min.Y)/2){
+							//inters=true;
+							tot++;
+						//} else {
+							//Bottoms[i].intersected = false;
+						}
+					}
+				} else {
 				}
 			}
 		}
+		if(isInvisible){
+			Bottoms[i].intersected=false;
+			if(!inters){
+				Bottoms[i].invisible=false;
+			}
+		} else {
+			if(inters){
+				Bottoms[i].invisible=true;
+				Bottoms[i].intersected=true;
+			} else {
+				Bottoms[i].intersected=false;
+			}
+		}
+		/*if(wasInter){
+			if(inters){
+				Bottoms[i].invisible=true;
+				tot++;
+			}
+		} else {
+			if(isInvisible){
+				Bottoms[i].invisible=false;
+			}
+		}*/
+	}
+	return tot;
+}
+
+void draw_sceneMenu(){
+	if(current_light==0){
+		draw_iluminationMode();
 		for (int i=0;i<Bottoms.size();i++){
 			Bottoms[i].intersected=false;
 		}
 	} else {
-		WasIntersected.resize(Bottoms.size());
-		int tot=0;
-		for (int i=0;i<Bottoms.size();i++){
-			bool wasInter=Bottoms[i].intersected;
-			WasIntersected[i]=wasInter;
-			for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
-				Hand hand = *hl;
-				if(isPuno(hand)){
-					getArticulationPoints(Articulation_Points,hand.isRight());
-					Bottoms[i].intersecta(Articulation_Points);
-					if(Bottoms[i].intersected){
-						tot++;
-					}
-				}
-			}
-		}
+		int tot=draw_selectionMode();
 		if(tot>1){
 			for (int i=0;i<Bottoms.size();i++){
 				Bottoms[i].intersected=false;
@@ -361,25 +384,26 @@ void draw_sceneMenu(){
 	}
 	draw_bottoms();
 	draw_topos();
-	//std::cout << "**-pase5" << std::endl;
 }
 
 void draw_sceneGame(){
 	if(hands.isEmpty()){
 		getArticulationPoints(Articulation_Points);
 		for (int i=0;i<Topos.size();i++){
-			Topos[i].intersecta(Articulation_Points);
-			if(Topos[i].intersected){
-				if (Topos[i].maxY<=(Topos[i].model->max.Y+Topos[i].model->min.Y)/2){ 	
-					Topos[i].invisible=true;
+			if(!Topos[i].invisible){
+				Topos[i].intersecta(Articulation_Points);
+				if(Topos[i].intersected){
+					if (Topos[i].maxY<=(Topos[i].model->max.Y+Topos[i].model->min.Y)/2){ 	
+						Topos[i].invisible=true;
+					}
 				}
 			}
 		}
 	} else {
 		for (int i=0;i<Topos.size();i++){
-			for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
-				Hand hand = *hl;
-				//if(isPuno(hand)){
+			if(!Topos[i].invisible){
+				for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+					Hand hand = *hl;
 					getArticulationPoints(Articulation_Points,hand.isRight());
 					Topos[i].intersecta(Articulation_Points);
 					if(Topos[i].intersected){
@@ -387,7 +411,7 @@ void draw_sceneGame(){
 							Topos[i].invisible=true;
 						}
 					}
-				//}
+				}
 			}
 				
 		}
@@ -421,29 +445,8 @@ bool draw_scene(){
 	Cube rightC(/*MiCamara->camView.X+*/0,100/*MiCamara->camView.Y/2*/,200,400);
 	std::vector<objl::Vector3> HandPoints;
 	bool imove=false;
-	if(current_light==0){
-	} else {
-		if  (hands.isEmpty()){
-			/*getLeapArticulationPoints(HandPoints,2);
-			if(leftC.check_intersection(HandPoints)){
-				imove=true;
-				MiCamara->rotate_c-=0.3;
-				glColor4f(1.0,0.1,0.1,0.3);
-				leftC.draw(1);
-			} else {
-				glColor4f(0.2,0.0,0.0,0.3);
-				leftC.draw(3);
-			}
-			if(rightC.check_intersection(HandPoints)){
-				imove=true;
-				MiCamara->rotate_c+=0.3;
-				glColor4f(1.0,0.1,0.1,0.3);
-				rightC.draw(1);
-			} else {
-				glColor4f(0.2,0.0,0.0,0.3);
-				rightC.draw(2);
-			}*/
-		} else {
+	if(current_light!=0){
+		if  (!hands.isEmpty()){
 			for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
 				Hand hand = *hl;
 				getLeapArticulationPoints(HandPoints,hand.isRight());
@@ -519,9 +522,7 @@ void myDisplay(void){
 	//glLoadIdentity();
 	//dibujar escenario Menu o Game
 	//glLoadIdentity();
-	/*SetLight( LOCAL_MyLights[0] );
-	SetLight( LOCAL_MyLights[1] );
-	SetLight( LOCAL_MyLights[2] );
+	/*SetLight( LOCAL_MyLights[0] );SetLight( LOCAL_MyLights[1] );SetLight( LOCAL_MyLights[2] );
 	glPushMatrix();*/
 	loadCamera();
 	//SetLight( LOCAL_MyLights[1] );
@@ -545,11 +546,17 @@ void myDisplay(void){
 			//std::cout << "+pase4" << std::endl;
 			//std::cout << "pase5" << std::endl;
 		} else {
-			if(gameBackup!=game || topooBackup!=topoo){
+			if(gameBackup!=game){// || topooBackup!=topoo){
 				initTopo();
 				createTopos(1,400,200,250);
 				createBottoms();
+				/*for (int i=0;i<Bottoms.size();i++){
+					Bottoms[i].invisible=true;
+				}*/
 				//std::cout << "+pase5" << std::endl;
+			} else if(topooBackup!=topoo){
+				initTopo();
+				createTopos(1,400,200,250);
 			}
 			gameBackup=game;
 			topooBackup=topoo;
@@ -590,9 +597,7 @@ void initGraphics(int& argc, char **argv){
 	glutReshapeFunc(reshape);
 	glutSpecialFunc(specialKeys);
 	glutIdleFunc(idle);
-	//glutMouseFunc(mouse);
-	//glutMotionFunc(NULL);
-	//glutPassiveMotionFunc(MouseMotion);
+	//glutMouseFunc(mouse);glutMotionFunc(NULL);glutPassiveMotionFunc(MouseMotion);
 	myInit();
 }
 
