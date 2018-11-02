@@ -129,10 +129,10 @@ void parseCommand(char* strCommandParse) {
     }
 }
 
-void reshape(int width, int height) {
+/*void reshape(int width, int height) {
     glViewport(0, 0, width, height);
     MiCamara->SetGLAspectRatioCamera();
-}
+}*/
 
 void MouseMotion(int x, int y) {
     old_y = y;
@@ -534,7 +534,7 @@ int main(int argc, char** argv) {
 	glutCreateWindow("tortuga");
 	//glEnable(GL_COLOR_MATERIAL);
 	glutDisplayFunc(display);
-	glutReshapeFunc(reshape);
+	//glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(SpecialKey);
 	//Ratón
