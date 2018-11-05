@@ -327,26 +327,26 @@ bool startConnection(int port){
 }
 
 int main(void){
-
+	//
 	if(-1 == SocketFD){
 		perror("can not create socket");
 		exit(EXIT_FAILURE);
 	}
-
+	//
 	memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
-
+	//
 	stSockAddr.sin_family = AF_INET;
 	stSockAddr.sin_addr.s_addr = INADDR_ANY;
 	for (int i=1200;startConnection(i)==false;i++){
 		std::cout << "Port " << i << ": " << "bind or listen error" << std::endl;
 	}
-	
+	//
 	while(true){
 		int ConnectFD = accept(SocketFD, NULL, NULL);
 		std::cout << "ConnectFD: " << ConnectFD << std::endl;
 		std::thread(acceptClient,ConnectFD).detach();
 	}
-
+	//
 	shutdown(SocketFD, SHUT_RDWR);
 	close(SocketFD);
 	return 0;

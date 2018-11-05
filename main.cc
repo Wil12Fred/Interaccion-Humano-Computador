@@ -618,7 +618,8 @@ int main(int argc, char **argv){
 	int port;
 	std::cout << "Port: ";
 	std::cin >> port;
-	MainConnection MC("192.168.8.108",port);
+	//MainConnection MC("192.168.8.108",port);
+	MainConnection MC("10.0.1.8",port);
 	ClientServerModel CSM(&MC);
 	CSM.run(read2, write2);
 	MiCamara = new class Camara();
