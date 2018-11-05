@@ -3,6 +3,20 @@
 #include <time.h>
 #include <set>
 #include <map>
+//
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <stdlib.h>
+#include <cstring>
+#include <unistd.h>
+#include <thread>
+#include <vector>
+#include <errno.h>
+//
+//#include "conneccion.h"
+#include "modelocs.h"
 //#include <conio.h>
 //#include <stlib.h>
 #define GL_GLEXT_PROTOTYPES
@@ -11,6 +25,7 @@
 #else
 #include <GL/glut.h>
 #endif
+
 #include "leapmotion.h"
 //#include "obj.h"
 #include "vector2.h"
@@ -527,24 +542,18 @@ void myDisplay(void){
 	loadCamera();
 	//SetLight( LOCAL_MyLights[1] );
 	//glEnable(GL_BLEND);
-	//std::cout << "pase1" << std::endl;
 	glPushMatrix();
 		draw_hands();
 		if(game){
 			//initTopo();
 			if(gameBackup!=game){
-				//std::cout << "*pase4" << std::endl;
 				MiCamara->rotate_c=0;
 				initTopo();
 				//topoo=!topoo;
 				createTopos();
-				//std::cout << "/pase4" << std::endl;
 			}
-			//std::cout << "-pase4" << std::endl;
 			gameBackup=game;
 			draw_sceneGame();
-			//std::cout << "+pase4" << std::endl;
-			//std::cout << "pase5" << std::endl;
 		} else {
 			if(gameBackup!=game){// || topooBackup!=topoo){
 				initTopo();
@@ -563,20 +572,13 @@ void myDisplay(void){
 			draw_sceneMenu();
 			//std::cout << "*-pase5" << std::endl;
 		}
-		//std::cout << "pase2" << std::endl;
 		//Escenario
 		//glDisable(GL_DEPTH_TEST);
 		bool imove=draw_scene();
-		//std::cout << "+pase3" << std::endl;
 		display();
-		//std::cout << "+pase6" << std::endl;
 	glPopMatrix();
 	SetLight( LOCAL_MyLights[0] );
-	//glutSwapBuffers();
-	//glDisable(GL_BLEND);
-	//glEnable(GL_DEPTH_TEST);
-	//glPopMatrix();
-	//glFlush();
+	//glutSwapBuffers();//glDisable(GL_BLEND);//glEnable(GL_DEPTH_TEST);//glPopMatrix();//glFlush();
 	NEWHAND=false;
 	glutSwapBuffers();
 	//inmove=imove;
@@ -606,7 +608,19 @@ void play(){
 	glutMainLoop();
 }
 
+void read2(int SocketFD){
+}
+
+void write2(int SocketFD){
+}
+
 int main(int argc, char **argv){
+	int port;
+	std::cout << "Port: ";
+	std::cin >> port;
+	MainConnection MC("192.168.8.108",port);
+	ClientServerModel CSM(&MC);
+	CSM.run(read2, write2);
 	MiCamara = new class Camara();
 	initGraphics(argc, argv);
 	play();
