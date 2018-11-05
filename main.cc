@@ -257,7 +257,7 @@ void createTopos(int n_topos=4,double amp=400, double dist=0, double CY=MiCamara
 void draw_bottoms(){
 	for (int i=0;i<Bottoms.size();i++){
 		//if(!Bottoms[i].invisible){
-			Bottoms[i].draw();
+			Bottoms[i].draw(true);
 		//} else {
 		//	Topos[i].draw(true);
 		//}
