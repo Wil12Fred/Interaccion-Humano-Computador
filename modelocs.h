@@ -11,11 +11,11 @@ struct ClientServerModel{
 	bool run(void (*readF)(int),void (*writeF)(int)){
 		read=std::thread(readF,clientConnection->socketFD);
 		write=std::thread(writeF,clientConnection->socketFD);
-		read.join();
-		read.std::thread::~thread();
-		write.detach();
-		write.std::thread::~thread();
-		clientConnection->endConnection();
+		//read.join();
+		//read.std::thread::~thread();
+		//write.detach();
+		//write.std::thread::~thread();
+		//clientConnection->endConnection();
 		return true;
 	}
 };

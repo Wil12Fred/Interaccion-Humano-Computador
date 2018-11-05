@@ -608,7 +608,52 @@ void play(){
 	glutMainLoop();
 }
 
+std::string Cl_ReadMsg(int SocketFD,int size_msg){
+	int n;
+	char msg[size_msg+1];
+	n = read(SocketFD, msg, size_msg);
+	msg[size_msg]=0;
+	return std::string(msg);
+}
+
 void read2(int SocketFD){
+	int n;
+	char buffer[5]; //
+	for (;;){
+		bzero(buffer, 5);
+		do {
+			n = read(SocketFD, buffer, 4); // Reading first 4 bytes
+			if(n==0){//interrupted connection
+				/*if(playing)
+					endwin();*/
+				std::cout << "Server: The connection was interrupted" << std::endl;
+				return;
+			}
+			int size_msg=atoi(buffer);
+			bzero(buffer, 4); // Zeros for the 4 bytes that was reading   
+			//
+			n = read(SocketFD, buffer, 1); //reading 1 bytes
+			std::string action(buffer);
+			bzero(buffer, 1); //equal to the before
+
+			if (action == "G"){ // Responsive when exist movement in Game
+				//Cl_game(SocketFD,size_msg);
+			} else if(action=="O"){
+				//Cl_bullet(SocketFD,size_msg);
+			} else if(action=="R"){
+				std::string msg=Cl_ReadMsg(SocketFD, size_msg);
+				std::cout << msg << std::endl;
+				//print_message(msg);
+			} else if(action=="D"){
+				/*if(!playing){
+					std::cout << "Downloading" << std::endl;
+				}*/
+				//std::string msg=Cl_Download(SocketFD, size_msg);
+				//print_message(msg);
+			}
+
+		} while (n == 0);
+	}
 }
 
 void write2(int SocketFD){
