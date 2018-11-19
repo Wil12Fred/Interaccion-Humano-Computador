@@ -25,7 +25,7 @@
 #else
 #include <GL/glut.h>
 #endif
-
+//
 #include "leapmotion.h"
 //#include "obj.h"
 #include "vector2.h"
@@ -41,6 +41,25 @@
 #include "Vector_tools.h"
 #include "light.h"
 #include "utility.h"
+#include "utilidad.h"
+
+MainConnection* MC;//("192.168.8.108",port);
+
+std::string readServer(int SocketFD){
+	int n;
+	char buffer[5]; //
+	bzero(buffer, 5);
+	n = read(SocketFD, buffer, 4); // Reading first 4 bytes
+	if(n==0){//interrupted connection
+		std::cout << "Server: The connection was interrupted" << std::endl;
+		return "";
+	}
+	int size_mns=stoi(std::string(buffer));
+	char mns[size_mns+1];
+	mns[size_mns]=0;
+	n = read(SocketFD, mns, size_mns);
+	return std::string(mns);
+}
 
 static light **LOCAL_MyLights;
 static int current_mode = 0;
@@ -121,6 +140,7 @@ void initBottom(){
 	Bottom->useColor=true;
 	Bottom->solid();
 }
+
 void initLightVariables(){
 	//DIRECCIONAL
 	LOCAL_MyLights = (light **) malloc( 3 * sizeof(light *));
@@ -186,6 +206,19 @@ void myInit() {
 	initGlVariables();
 }
 
+bool colaborador=true;
+
+void initGameConnection(){
+	game=!game;
+	write(MC->socketFD, "0001",4);
+	std::string mns = readServer(MC->socketFD);
+	if(mns=="0"){
+		colaborador=true;
+	} else {
+		colaborador=false;
+	}
+}
+
 void specialKeys(int key, int x, int y){
 	if (key == GLUT_KEY_RIGHT){
 		rotate_y -= 5;
@@ -196,7 +229,8 @@ void specialKeys(int key, int x, int y){
 	} else if (key == GLUT_KEY_DOWN){
 		rotate_x -= 5;
 	} else if (key == GLUT_KEY_F1){//  Solicitar actualización de visualización
-		game=!game;
+		initGameConnection();
+		glutPostRedisplay();
 		return;
 	} else if (key == GLUT_KEY_F2){
 		rotate_z-=5;
@@ -219,7 +253,8 @@ void specialKeys(int key, int x, int y){
 }
 
 std::vector<objl::Vector3> Articulation_Points;
-std::vector<Objeto> Topos, Bottoms;
+std::vector<Objeto> Topos;
+std::vector<Objeto> Bottoms;
 
 void createBottoms(){
 	int scens=6;
@@ -244,7 +279,7 @@ void createBottoms(){
 }
 
 void createTopos(int n_topos=4,double amp=400, double dist=0, double CY=MiCamara->camView.Y/4){
-	int scens=6;
+	int scens=1;
 	double angle;
 	if(n_topos>1){
 		angle = 360.0/(scens*(n_topos-1));
@@ -267,8 +302,6 @@ void createTopos(int n_topos=4,double amp=400, double dist=0, double CY=MiCamara
 	}
 }
 
-//std::vector<bool>WasIntersected;
-
 void draw_bottoms(){
 	for (int i=0;i<Bottoms.size();i++){
 		//if(!Bottoms[i].invisible){
@@ -287,7 +320,7 @@ void draw_bottoms(){
 		//}
 	}
 	if(Bottoms[1].intersected){// && Bottoms[1].maxY<=max/* && WasIntersected[1]==0*/){
-		game=!game;
+		initGameConnection();
 		//std::cout << "1111y000" << std::endl;
 	}
 	if(Bottoms[2].intersected){// && Bottoms[2].maxY<=max/* && WasIntersected[2]==0*/){
@@ -301,12 +334,26 @@ void draw_bottoms(){
 bool draw_topos(){
 	bool existTopos=false;
 	for (int i=0;i<Topos.size();i++){
-		if(!Topos[i].invisible){
-			existTopos=true;
-			Topos[i].draw();
-		} else {
-			//Topos[i].maxY=(Topos[i].model->min.Y+Topos[i].model->max.Y)/2;
-			Topos[i].draw(true, false);
+		if(!colaborador){
+			if(!Topos[i].invisible){
+				existTopos=true;
+				Topos[i].draw();
+			} else {
+				//Topos[i].maxY=(Topos[i].model->min.Y+Topos[i].model->max.Y)/2;
+				Topos[i].draw(true, false, true);
+			}
+		} else {//COLABORADOR
+			if(game){
+				//Topos[i].draw(true,false);
+				if(!Topos[i].invisible){
+					Topos[i].draw();//true, false);
+				} else {
+					Topos[i].maxY=Topos[i].model->max.Y+100;
+					Topos[i].draw(true);
+				}
+			} else {
+				Topos[i].draw();
+			}
 		}
 	}
 	return existTopos;
@@ -401,6 +448,15 @@ void draw_sceneMenu(){
 	draw_topos();
 }
 
+void setInvisibleTopo(int i){
+	Topos[i].invisible=true;
+	write(MC->socketFD, "0004",4);
+	std::string size_mns = fillZeros(std::to_string(i).size(),4);
+	write(MC->socketFD, size_mns.c_str(),4);
+	std::string i_topo = std::to_string(i);
+	write(MC->socketFD, i_topo.c_str(),i_topo.size());
+}
+
 void draw_sceneGame(){
 	if(hands.isEmpty()){
 		getArticulationPoints(Articulation_Points);
@@ -409,30 +465,50 @@ void draw_sceneGame(){
 				Topos[i].intersecta(Articulation_Points);
 				if(Topos[i].intersected){
 					if (Topos[i].maxY<=(Topos[i].model->max.Y+Topos[i].model->min.Y)/2){ 	
-						Topos[i].invisible=true;
+						//Topos[i].invisible=true;
+						setInvisibleTopo(i);
 					}
 				}
 			}
 		}
 	} else {
 		for (int i=0;i<Topos.size();i++){
-			if(!Topos[i].invisible){
-				for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
-					Hand hand = *hl;
-					getArticulationPoints(Articulation_Points,hand.isRight());
-					Topos[i].intersecta(Articulation_Points);
-					if(Topos[i].intersected){
-						if (Topos[i].maxY<=(Topos[i].model->max.Y+Topos[i].model->min.Y)/2){
-							Topos[i].invisible=true;
+			if(!colaborador){
+				if(!Topos[i].invisible){
+					for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+						Hand hand = *hl;
+						getArticulationPoints(Articulation_Points,hand.isRight());
+						Topos[i].intersecta(Articulation_Points);
+						if(Topos[i].intersected){
+							if (Topos[i].maxY<=(Topos[i].model->max.Y+Topos[i].model->min.Y)/2){
+								//Topos[i].invisible=true;
+								setInvisibleTopo(i);
+							}
+						}
+					}
+				}
+			} else {//COLABORADOR
+				if(!Topos[i].invisible){
+					for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
+						Hand hand = *hl;
+						getArticulationPoints(Articulation_Points,hand.isRight());
+						Topos[i].intersecta(Articulation_Points);
+						if(Topos[i].intersected){
+							/*if (Topos[i].maxY<=(Topos[i].model->max.Y+Topos[i].model->min.Y)/2){
+								Topos[i].invisible=true;
+							}*/
+							//Topos[i].invisible=true;
+							setInvisibleTopo(i);
 						}
 					}
 				}
 			}
-				
 		}
 	}
 	if(!draw_topos()){
-		game=false;
+		if(!colaborador){
+			game=false;
+		}
 	}
 }
 
@@ -471,11 +547,9 @@ bool draw_scene(){
 				objl::Vector3 PalmNormal= objl::Vector3(palmNormal.x,palmNormal.y,palmNormal.z);
 				if(isPalm(hand)){
 					if(hand.isLeft()){// && isPalm(hand)){
-						
 						getLeapArticulationPoints(HandPoints,0);
 						if(leftC.check_intersection(HandPoints)){
 							imove=true;
-							
 							//glColor4f(1.0,0.1,0.1,0.3);
 							//leftC.draw(1);
 							double opac=std::max(float(0.0),float(PalmNormal.X));
@@ -483,19 +557,16 @@ bool draw_scene(){
 								MiCamara->rotate_c-=opac*0.3;
 							}
 							glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
-							//glColor4f(0.2,0.0,0.0,0.3);
-							//leftC.draw(3);
+							//glColor4f(0.2,0.0,0.0,0.3);//leftC.draw(3);
 							leftC.draw(1);
 						}
 					} else {//if(hand.isRight() && isPalm(hand)){
 						getLeapArticulationPoints(HandPoints,1);
 						if(rightC.check_intersection(HandPoints)){
 							imove=true;
-							//glColor4f(1.0,0.1,0.1,0.3);
-							//rightC.draw(1);
+							//glColor4f(1.0,0.1,0.1,0.3);//rightC.draw(1);
 						//} else {
-							//glColor4f(0.2,0.0,0.0,0.3);
-							//rightC.draw(2);
+							//glColor4f(0.2,0.0,0.0,0.3);//rightC.draw(2);
 							double opac=std::max(float(0.0),float(-PalmNormal.X));
 							if(opac>0.5){
 								MiCamara->rotate_c+=opac*0.3;
@@ -529,6 +600,18 @@ void display(void){
 	}
 }
 
+int getCantToposServer(){
+	write(MC->socketFD, "0002",4);
+	std::string mns=readServer(MC->socketFD);
+	return stoi(mns);
+}
+
+std::string getTopos(){
+	write(MC->socketFD, "0003",4);
+	std::string mns=readServer(MC->socketFD);
+	return mns;
+}
+
 void myDisplay(void){
 	//inmove=false;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_BLENT_BUFFER_BIT);
@@ -537,8 +620,7 @@ void myDisplay(void){
 	//glLoadIdentity();
 	//dibujar escenario Menu o Game
 	//glLoadIdentity();
-	/*SetLight( LOCAL_MyLights[0] );SetLight( LOCAL_MyLights[1] );SetLight( LOCAL_MyLights[2] );
-	glPushMatrix();*/
+	//SetLight( LOCAL_MyLights[0] );SetLight( LOCAL_MyLights[1] );SetLight( LOCAL_MyLights[2] );glPushMatrix();
 	loadCamera();
 	//SetLight( LOCAL_MyLights[1] );
 	//glEnable(GL_BLEND);
@@ -549,8 +631,27 @@ void myDisplay(void){
 			if(gameBackup!=game){
 				MiCamara->rotate_c=0;
 				initTopo();
-				//topoo=!topoo;
-				createTopos();
+				int cantTopos=getCantToposServer();
+				if(colaborador){
+					createTopos(cantTopos,0,50, MiCamara->camView.Y/4-100);
+				} else {
+					createTopos(cantTopos,0,50, MiCamara->camView.Y/4);
+				}
+				/*for (int i=0; i<Topos.size(); i++){
+					Topos[i].invisible=true;
+				}*/
+			}
+			std::string toposStatus = getTopos();
+			for (int i=0;i<Topos.size();i++){
+				if(toposStatus[i]=='1'){
+					if(!Topos[i].invisible){
+						Topos[i].invisible=true;
+					}
+				} else {
+					if(Topos[i].invisible){
+						Topos[i].invisible=false;
+					}
+				}
 			}
 			gameBackup=game;
 			draw_sceneGame();
@@ -559,10 +660,6 @@ void myDisplay(void){
 				initTopo();
 				createTopos(1,400,200,250);
 				createBottoms();
-				/*for (int i=0;i<Bottoms.size();i++){
-					Bottoms[i].invisible=true;
-				}*/
-				//std::cout << "+pase5" << std::endl;
 			} else if(topooBackup!=topoo){
 				initTopo();
 				createTopos(1,400,200,250);
@@ -570,7 +667,6 @@ void myDisplay(void){
 			gameBackup=game;
 			topooBackup=topoo;
 			draw_sceneMenu();
-			//std::cout << "*-pase5" << std::endl;
 		}
 		//Escenario
 		//glDisable(GL_DEPTH_TEST);
@@ -616,7 +712,7 @@ std::string Cl_ReadMsg(int SocketFD,int size_msg){
 	return std::string(msg);
 }
 
-void read2(int SocketFD){
+/*void read2(int SocketFD){
 	int n;
 	char buffer[5]; //
 	for (;;){
@@ -624,8 +720,8 @@ void read2(int SocketFD){
 		do {
 			n = read(SocketFD, buffer, 4); // Reading first 4 bytes
 			if(n==0){//interrupted connection
-				/*if(playing)
-					endwin();*/
+				//if(playing)
+					//endwin();
 				std::cout << "Server: The connection was interrupted" << std::endl;
 				return;
 			}
@@ -644,9 +740,9 @@ void read2(int SocketFD){
 				std::cout << msg << std::endl;
 				//print_message(msg);
 			} else if(action=="D"){
-				/*if(!playing){
+				//if(!playing){
 					std::cout << "Downloading" << std::endl;
-				}*/
+				//}
 				//std::string msg=Cl_Download(SocketFD, size_msg);
 				//print_message(msg);
 			}
@@ -655,16 +751,20 @@ void read2(int SocketFD){
 }
 
 void write2(int SocketFD){
-}
+	return;
+}*/
 
 int main(int argc, char **argv){
 	int port;
 	std::cout << "Port: ";
-	std::cin >> port;
-	//MainConnection MC("192.168.8.108",port);
+	std::cin >> port;//MainConnection MC("192.168.8.108",port);
+	MC=new MainConnection("172.20.10.2", port);
+	char buffer[100];
+	buffer[13]=0;
+	read(MC->socketFD,buffer,12);
+	/*ClientServerModel CSM(MC);
 	MainConnection MC("172.20.10.4",port);
-	ClientServerModel CSM(&MC);
-	CSM.run(read2, write2);
+	CSM.run(read2, write2);*/
 	MiCamara = new class Camara();
 	initGraphics(argc, argv);
 	play();

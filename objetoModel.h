@@ -72,7 +72,7 @@ struct Objeto{
 		}
 		return intersected;
 	}
-	void draw(bool forceDraw=false, bool withTexture=true){
+	void draw(bool forceDraw=false, bool withTexture=true, bool move=false){
 		if(forceDraw || !invisible){
 			if(!model->isLoaded){
 				bool loadout = model->isLoaded = model->formatObj.LoadFile(model->fileObj);
@@ -95,9 +95,13 @@ struct Objeto{
 				if(intersected)
 					glTranslatef(0,model->max.Y-maxY,0);
 			} else {
-				glTranslatef(0,(model->max.Y+model->min.Y)/2-model->max.Y,0);
+				if(move){
+					glTranslatef(0,(model->max.Y+model->min.Y)/2-model->max.Y,0);
+				}
 				model->draw(withTexture);
-				glTranslatef(0,model->max.Y-(model->max.Y+model->min.Y)/2,0);
+				if(move){
+					glTranslatef(0,model->max.Y-(model->max.Y+model->min.Y)/2,0);
+				}
 			}
 			glTranslatef(-Movimiento.X,-Movimiento.Y,-Movimiento.Z);
 		}

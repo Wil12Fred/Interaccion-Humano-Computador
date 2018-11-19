@@ -58,8 +58,12 @@ std::string protocoloGame(std::string affect){
 		fillZeros(Game.players[affect].lives,2);
 }*/
 
+bool existColaborador=0;
+int colaborador=0;
+int cantTopos=9;
+std::vector<bool> Topos;
+
 void read2(int ConnectFD){
-/*
 	char buffer[250];
 	int n;
 	bool login=false;
@@ -69,7 +73,7 @@ void read2(int ConnectFD){
 		do{
 			n = read(ConnectFD, buffer, 4);
 			if(n==0){
-				if(login){
+				/*if(login){
 					std::string username = "";
 					find_str(ConnectFD,username);
 					if(Game.players.find(username)!=Game.players.end()){
@@ -83,12 +87,59 @@ void read2(int ConnectFD){
 						Game.players.erase(Game.players.find(username));
 					}
 					clients.erase(clients.find(username));
-				}
+				}*/
 				close(ConnectFD);
 				return;
 			}
 			std::string sendFile(buffer);
-			int size_txt=atoi(buffer);
+			if(sendFile=="0001"){
+				if(!existColaborador){
+					write(ConnectFD, "00010",5);
+					Topos.clear();
+					Topos.resize(cantTopos);
+					colaborador=ConnectFD;
+					existColaborador=1;
+				} else {
+					write(ConnectFD, "00011",5);
+				}
+				/*int x=rand()%2;
+				std::string tipo="000";
+				tipo.push_back(x+'0');
+				write(ConnectFD, tipo.c_str(),4);*/
+			} else if (sendFile=="0002"){
+				std::string cant=fillZeros(std::to_string(cantTopos).size(),4)+std::to_string(cantTopos);
+				write(ConnectFD, cant.c_str(), cant.size());
+			} else if (sendFile=="0003"){
+				std::string mns=fillZeros(cantTopos,4);
+				if(ConnectFD==colaborador){
+					for (int i=0;i<cantTopos;i++){
+						if(Topos[i]){
+							mns.push_back('1');
+						} else {
+							mns.push_back('0');
+						}
+					}
+				} else {
+					for (int i=0;i<cantTopos;i++){
+						if(Topos[i]){
+							mns.push_back('0');
+						} else {
+							mns.push_back('1');
+						}
+					}
+				}
+				write(ConnectFD, mns.c_str(), mns.size());
+			} else if (sendFile=="0004"){
+				buffer[5]=0;
+				n = read(ConnectFD, buffer, 4);
+				int size_mns=stoi(std::string(buffer));
+				char mns[size_mns+1];
+				mns[size_mns]=0;
+				n = read(ConnectFD, mns, size_mns);
+				int topo=atoi(mns);
+				Topos[topo]=!Topos[topo];
+			}
+			/*int size_txt=atoi(buffer);
 			bzero(buffer, 4);
 			//
 			n = read(ConnectFD, buffer, 1);
@@ -136,11 +187,11 @@ void read2(int ConnectFD){
 			} else if (action == "C"){ //protocolo for chating
 				std::string username = "";
 				find_str(ConnectFD,username); //username has nickname who send to mssg 
-
+				//
 				n = read(ConnectFD, buffer, 2); //reading a size of the other client
 				int size_othername=atoi(buffer);
 				bzero(buffer, 2);
-
+				//
 				char oname[size_othername+1];
 				oname[size_othername]=0;
 				n = read(ConnectFD, oname, size_othername); //reading a nickname the other client
@@ -155,7 +206,7 @@ void read2(int ConnectFD){
 					write2(ConnectFD, err, action);
 					continue;
 				}	
-				
+				//
 				int otherConnectFD = clients.find(othername)->second; //finding socket number the other client for send to mssg 
 				if (otherConnectFD < 0){
 					perror("error in nickname");
@@ -168,12 +219,9 @@ void read2(int ConnectFD){
 					msg="Not login\n";
 					write2(ConnectFD, msg, action);
 				}
-
 			} else if (action == "G"){ //protocolo for chating
 				std::string username = "";
-
 				find_str(ConnectFD,username);
-
 				int size_msg= size_txt;// size has the size the real mssg
 				n = read(ConnectFD, buffer, size_msg);
 				int msg=atoi(buffer);
@@ -221,7 +269,6 @@ void read2(int ConnectFD){
 						}
 					}
 				}
-				
 			} else if (action == "E"){//protocol for End
 				std::vector<std::string> V;
 				for (auto it=clients.begin();it!=clients.end();it++){
@@ -234,7 +281,6 @@ void read2(int ConnectFD){
 				}
 				close(ConnectFD);
 				return;
-
 			} else if (action == "F"){
 				sendFile+="D";
 				std::string username = "";
@@ -279,10 +325,9 @@ void read2(int ConnectFD){
 
 			} else {// this is can be better, you can do it =)
 				std::cout << "error in action, msg bad\n";
-			}
-
+			}*/
 		} while (n == 0);
-	}*/
+	}
 }
 
 bool write2(int ConnectFD, std::string mssg, std::string act, std::string remitente){
@@ -327,6 +372,7 @@ bool startConnection(int port){
 }
 
 int main(void){
+	srand(time(NULL));
 	//
 	if(-1 == SocketFD){
 		perror("can not create socket");
