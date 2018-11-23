@@ -88,6 +88,10 @@ void read2(int ConnectFD){
 					}
 					clients.erase(clients.find(username));
 				}*/
+				if(ConnectFD==colaborador){
+					colaborador=0;
+					existColaborador=0;
+				}
 				close(ConnectFD);
 				return;
 			}

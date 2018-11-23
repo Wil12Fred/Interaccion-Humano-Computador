@@ -3,6 +3,7 @@
 #include <time.h>
 #include <set>
 #include <map>
+#include <ctime>
 //
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -42,6 +43,8 @@
 #include "light.h"
 #include "utility.h"
 #include "utilidad.h"
+
+unsigned t0, t1;
 
 MainConnection* MC;//("192.168.8.108",port);
 
@@ -507,16 +510,22 @@ void draw_sceneGame(){
 	}
 	if(!draw_topos()){
 		if(!colaborador){
-			game=false;
+			//game=false;
 		}
 	}
 }
 
 void idle(void){
+	t1=clock();
 	if( topoo!=topooBackup || gameBackup!=game/*  || inmove*/){
 		glutPostRedisplay();
 	} else if (NEWHAND) {
 		glutPostRedisplay();
+	} else {
+		double time=(double(t1-t0)/CLOCKS_PER_SEC);
+		if(time>0.016){
+			glutPostRedisplay();
+		}
 	}
 }
 
@@ -528,7 +537,7 @@ void loadCamera(){
 }
 
 bool draw_scene(){
-	Cube baseC(/*MiCamara->camView.X*/-400,/*MiCamara->camView.Y/5*/60,/*MiCamara->camView.Z*/+400,800);
+	Cube baseC(/*MiCamara->camView.X*/-800,/*MiCamara->camView.Y/5*/60,/*MiCamara->camView.Z*/+800,1600);
 	glColor4f(0,0.2,0,0.8);
 	baseC.draw2();
 	//
@@ -623,6 +632,7 @@ void myDisplay(void){
 		loadBuffer=true;
 		glutPostRedisplay();
 	}
+	t0=clock();
 	//glLoadIdentity();
 	//dibujar escenario Menu o Game
 	//glLoadIdentity();
@@ -764,7 +774,7 @@ int main(int argc, char **argv){
 	int port;
 	std::cout << "Port: ";
 	std::cin >> port;//MainConnection MC("192.168.8.108",port);
-	MC=new MainConnection("172.20.10.2", port);
+	MC=new MainConnection("172.20.10.4", port);
 	char buffer[100];
 	buffer[13]=0;
 	read(MC->socketFD,buffer,12);
