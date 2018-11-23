@@ -612,11 +612,17 @@ std::string getTopos(){
 	return mns;
 }
 
+bool loadBuffer=false;
+
 void myDisplay(void){
 	//inmove=false;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_BLENT_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
+	if(!loadBuffer){
+		loadBuffer=true;
+		glutPostRedisplay();
+	}
 	//glLoadIdentity();
 	//dibujar escenario Menu o Game
 	//glLoadIdentity();
@@ -758,7 +764,7 @@ int main(int argc, char **argv){
 	int port;
 	std::cout << "Port: ";
 	std::cin >> port;//MainConnection MC("192.168.8.108",port);
-	MC=new MainConnection("172.20.10.4", port);
+	MC=new MainConnection("172.20.10.2", port);
 	char buffer[100];
 	buffer[13]=0;
 	read(MC->socketFD,buffer,12);
