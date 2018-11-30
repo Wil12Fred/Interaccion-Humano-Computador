@@ -516,16 +516,16 @@ void draw_sceneGame(){
 }
 
 void idle(void){
-	t1=clock();
+	//t1=clock();
 	if( topoo!=topooBackup || gameBackup!=game/*  || inmove*/){
 		glutPostRedisplay();
 	} else if (NEWHAND) {
 		glutPostRedisplay();
 	} else {
-		double time=(double(t1-t0)/CLOCKS_PER_SEC);
-		if(time>0.016){
-			glutPostRedisplay();
-		}
+		//double time=(double(t1-t0)/CLOCKS_PER_SEC);
+		//if(time>0.016){
+			//glutPostRedisplay();
+		//}
 	}
 }
 
@@ -623,6 +623,24 @@ std::string getTopos(){
 
 bool loadBuffer=false;
 
+std::thread readT;
+
+void updateTopos(){
+	char mns[5];
+	int n;
+	while(1){
+		mns[4]=0;
+		n = read(MC->socketFD, mns, 4);
+		if(std::string(mns)=="0005"){
+			mns[2]=0;
+			n = read(MC->socketFD, mns, 2);
+			int topo_c=atoi(mns);
+			Topos[topo_c].invisible=!Topos[topo_c].invisible;
+		}
+		glutPostRedisplay();
+	}
+}
+
 void myDisplay(void){
 	//inmove=false;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_BLENT_BUFFER_BIT);
@@ -632,7 +650,7 @@ void myDisplay(void){
 		loadBuffer=true;
 		glutPostRedisplay();
 	}
-	t0=clock();
+	//t0=clock();
 	//glLoadIdentity();
 	//dibujar escenario Menu o Game
 	//glLoadIdentity();
@@ -652,12 +670,16 @@ void myDisplay(void){
 					createTopos(cantTopos,0,50, MiCamara->camView.Y/4-100);
 				} else {
 					createTopos(cantTopos,0,50, MiCamara->camView.Y/4);
+					for (int i=0;i<cantTopos;i++){
+						Topos[i].invisible=true;
+					}
 				}
+				readT=std::thread(updateTopos);
 				/*for (int i=0; i<Topos.size(); i++){
 					Topos[i].invisible=true;
 				}*/
 			}
-			std::string toposStatus = getTopos();
+			/*std::string toposStatus = getTopos();
 			for (int i=0;i<Topos.size();i++){
 				if(toposStatus[i]=='1'){
 					if(!Topos[i].invisible){
@@ -668,7 +690,7 @@ void myDisplay(void){
 						Topos[i].invisible=false;
 					}
 				}
-			}
+			}*/
 			gameBackup=game;
 			draw_sceneGame();
 		} else {
@@ -693,6 +715,7 @@ void myDisplay(void){
 	//glutSwapBuffers();//glDisable(GL_BLEND);//glEnable(GL_DEPTH_TEST);//glPopMatrix();//glFlush();
 	NEWHAND=false;
 	glutSwapBuffers();
+	//glFlush();
 	//inmove=imove;
 }
 

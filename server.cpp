@@ -60,6 +60,7 @@ std::string protocoloGame(std::string affect){
 
 bool existColaborador=0;
 int colaborador=0;
+int killer=0;
 int cantTopos=9;
 std::vector<bool> Topos;
 
@@ -104,6 +105,7 @@ void read2(int ConnectFD){
 					colaborador=ConnectFD;
 					existColaborador=1;
 				} else {
+					killer=ConnectFD;
 					write(ConnectFD, "00011",5);
 				}
 				/*int x=rand()%2;
@@ -142,6 +144,15 @@ void read2(int ConnectFD){
 				n = read(ConnectFD, mns, size_mns);
 				int topo=atoi(mns);
 				Topos[topo]=!Topos[topo];
+				std::string stopo=std::to_string(topo);
+				if(stopo.size()==1){
+					stopo="0"+stopo;
+				}
+				if(ConnectFD==colaborador){
+					write(killer,std::string("0005"+stopo).c_str(),6);
+				} else {
+					write(colaborador,std::string("0005"+stopo).c_str(),6);
+				}
 			}
 			/*int size_txt=atoi(buffer);
 			bzero(buffer, 4);
