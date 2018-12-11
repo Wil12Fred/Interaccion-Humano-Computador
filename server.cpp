@@ -58,8 +58,8 @@ std::string protocoloGame(std::string affect){
 		fillZeros(Game.players[affect].lives,2);
 }*/
 
-bool existColaborador=0;
-int colaborador=0;
+bool existColaborator=0;
+int colaborator=0;
 int killer=0;
 int cantTopos=9;
 std::vector<bool> Topos;
@@ -89,35 +89,42 @@ void read2(int ConnectFD){
 					}
 					clients.erase(clients.find(username));
 				}*/
-				if(ConnectFD==colaborador){
-					colaborador=0;
-					existColaborador=0;
+				if(ConnectFD==colaborator){
+					colaborator=0;
+					existColaborator=0;
 				}
 				close(ConnectFD);
 				return;
 			}
 			std::string sendFile(buffer);
 			if(sendFile=="0001"){
-				if(!existColaborador){
+				if(!existColaborator){
+					std::cout << "colaborador\n";
 					write(ConnectFD, "00010",5);
 					Topos.clear();
 					Topos.resize(cantTopos);
-					colaborador=ConnectFD;
-					existColaborador=1;
-				} else {
+					colaborator=ConnectFD;
+					existColaborator=1;
+				} else if(ConnectFD!=colaborator){
 					killer=ConnectFD;
 					write(ConnectFD, "00011",5);
+				} else {
+					write(ConnectFD, "00010",5);
+					//Topos.clear();
+					//Topos.resize(cantTopos);
+					//colaborator=ConnectFD;
+					//existColaborator=1;
 				}
 				/*int x=rand()%2;
 				std::string tipo="000";
 				tipo.push_back(x+'0');
 				write(ConnectFD, tipo.c_str(),4);*/
 			} else if (sendFile=="0002"){
-				std::string cant=fillZeros(std::to_string(cantTopos).size(),4)+std::to_string(cantTopos);
+				std::string cant="0002"+fillZeros(std::to_string(cantTopos).size(),4)+std::to_string(cantTopos);
 				write(ConnectFD, cant.c_str(), cant.size());
 			} else if (sendFile=="0003"){
-				std::string mns=fillZeros(cantTopos,4);
-				if(ConnectFD==colaborador){
+				std::string mns="0003"+fillZeros(cantTopos,4);
+				if(ConnectFD==colaborator){
 					for (int i=0;i<cantTopos;i++){
 						if(Topos[i]){
 							mns.push_back('1');
@@ -148,10 +155,33 @@ void read2(int ConnectFD){
 				if(stopo.size()==1){
 					stopo="0"+stopo;
 				}
-				if(ConnectFD==colaborador){
-					write(killer,std::string("0005"+stopo).c_str(),6);
+				if(ConnectFD==colaborator){
+					if(killer){
+						write(killer,std::string("0005"+stopo).c_str(),6);
+					} else {
+						write(ConnectFD,std::string("0005"+stopo).c_str(),6);
+						Topos[topo]=!Topos[topo];
+					}
 				} else {
-					write(colaborador,std::string("0005"+stopo).c_str(),6);
+					if(existColaborator){
+						write(colaborator,std::string("0005"+stopo).c_str(),6);
+					} else {
+						write(ConnectFD,std::string("0005"+stopo).c_str(),6);
+						Topos[topo]=!Topos[topo];
+					}
+				}
+			} else if(sendFile=="0005"){
+				if(ConnectFD==colaborator){
+					existColaborator=false;
+					colaborator=0;
+					if(killer){
+						write(killer,"0006",4);
+					}
+				} else {
+					killer=0;
+					if(existColaborator){
+						write(colaborator,"0006",4);
+					}
 				}
 			}
 			/*int size_txt=atoi(buffer);

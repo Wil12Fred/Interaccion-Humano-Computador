@@ -115,7 +115,7 @@ Model* Topo;
 
 void initDiglet(){
 	Topo=new Model("Diglett.obj",50);
-	Topo->addMesh(0);Topo->addColor(0,1.0,0.0,0.0);
+	Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
 	Topo->addMesh(1);Topo->addColor(1,0.0,0.0,0.0);
 	Topo->moveToCenter();
 	Topo->useColor=true;
@@ -125,7 +125,7 @@ void initDiglet(){
 void initTopo(){
 	if(topoo){
 		Topo=new Model("Topo.obj",120);
-		Topo->addMesh(0);Topo->addColor(0,1.0,0.0,0.0);
+		Topo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
 		Topo->addMesh(1);Topo->addColor(1,0.0,0.0,0.0);
 		Topo->moveToCenter();
 		Topo->useColor=true;
@@ -209,16 +209,31 @@ void myInit() {
 	initGlVariables();
 }
 
-bool colaborador=true;
+bool colaborator=true;
+std::thread readT;
+
+void getCantToposServer(){
+	write(MC->socketFD, "0002",4);
+	//std::string mns=readServer(MC->socketFD);
+	//return stoi(mns);
+}
+
 
 void initGameConnection(){
 	game=!game;
-	write(MC->socketFD, "0001",4);
-	std::string mns = readServer(MC->socketFD);
-	if(mns=="0"){
-		colaborador=true;
+	if(game){
+		write(MC->socketFD, "0001",4);
+		getCantToposServer();
+		/*std::string mns = readServer(MC->socketFD);
+		if(mns=="0"){
+			colaborator=true;
+		} else {
+			colaborator=false;
+		}*/
 	} else {
-		colaborador=false;
+		write(MC->socketFD, "0005",4);
+		//readT.detach();
+		//readT.std::thread::~thread();
 	}
 }
 
@@ -337,7 +352,7 @@ void draw_bottoms(){
 bool draw_topos(){
 	bool existTopos=false;
 	for (int i=0;i<Topos.size();i++){
-		if(!colaborador){
+		if(!colaborator){
 			if(!Topos[i].invisible){
 				existTopos=true;
 				Topos[i].draw();
@@ -476,7 +491,7 @@ void draw_sceneGame(){
 		}
 	} else {
 		for (int i=0;i<Topos.size();i++){
-			if(!colaborador){
+			if(!colaborator){
 				if(!Topos[i].invisible){
 					for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
 						Hand hand = *hl;
@@ -509,7 +524,7 @@ void draw_sceneGame(){
 		}
 	}
 	if(!draw_topos()){
-		if(!colaborador){
+		if(!colaborator){
 			//game=false;
 		}
 	}
@@ -609,21 +624,14 @@ void display(void){
 	}
 }
 
-int getCantToposServer(){
-	write(MC->socketFD, "0002",4);
-	std::string mns=readServer(MC->socketFD);
-	return stoi(mns);
-}
-
-std::string getTopos(){
+void getTopos(){
 	write(MC->socketFD, "0003",4);
-	std::string mns=readServer(MC->socketFD);
-	return mns;
+	//std::string mns=readServer(MC->socketFD);
+	//return mns;
 }
 
 bool loadBuffer=false;
-
-std::thread readT;
+int cantTopos=-1;
 
 void updateTopos(){
 	char mns[5];
@@ -634,8 +642,32 @@ void updateTopos(){
 		if(std::string(mns)=="0005"){
 			mns[2]=0;
 			n = read(MC->socketFD, mns, 2);
-			int topo_c=atoi(mns);
-			Topos[topo_c].invisible=!Topos[topo_c].invisible;
+			if(game){
+				int topo_c=atoi(mns);
+				Topos[topo_c].invisible=!Topos[topo_c].invisible;
+			}
+		} else if(std::string(mns)=="0001"){
+			mns[1]=0;
+			n = read(MC->socketFD, mns, 1);
+			if(mns[0]=='0'){
+				colaborator=1;
+			} else {
+				colaborator=0;
+			}
+		} else if(std::string(mns)=="0002"){
+			std::string mns=readServer(MC->socketFD);
+			cantTopos=stoi(mns);
+		} else if(std::string(mns)=="0003"){
+			std::string mns=readServer(MC->socketFD);
+			for (int i=0;i<mns.size();i++){
+				if(mns[i]=='1'){
+					Topos[i].invisible=true;
+				} else {
+					Topos[i].invisible=false;
+				}
+			}
+		} else if(std::string(mns)=="0006"){
+			game=!game;
 		}
 		glutPostRedisplay();
 	}
@@ -646,10 +678,11 @@ void myDisplay(void){
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_BLENT_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
-	if(!loadBuffer){
+	/*if(!loadBuffer){
 		loadBuffer=true;
-		glutPostRedisplay();
-	}
+		glutSwapBuffers();
+		return;
+	}*/
 	//t0=clock();
 	//glLoadIdentity();
 	//dibujar escenario Menu o Game
@@ -665,8 +698,7 @@ void myDisplay(void){
 			if(gameBackup!=game){
 				MiCamara->rotate_c=0;
 				initTopo();
-				int cantTopos=getCantToposServer();
-				if(colaborador){
+				if(colaborator){
 					createTopos(cantTopos,0,50, MiCamara->camView.Y/4-100);
 				} else {
 					createTopos(cantTopos,0,50, MiCamara->camView.Y/4);
@@ -674,7 +706,7 @@ void myDisplay(void){
 						Topos[i].invisible=true;
 					}
 				}
-				readT=std::thread(updateTopos);
+				getTopos();
 				/*for (int i=0; i<Topos.size(); i++){
 					Topos[i].invisible=true;
 				}*/
@@ -801,6 +833,7 @@ int main(int argc, char **argv){
 	char buffer[100];
 	buffer[13]=0;
 	read(MC->socketFD,buffer,12);
+	readT=std::thread(updateTopos);
 	/*ClientServerModel CSM(MC);
 	MainConnection MC("172.20.10.4",port);
 	CSM.run(read2, write2);*/
