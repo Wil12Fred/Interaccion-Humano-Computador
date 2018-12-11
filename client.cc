@@ -112,6 +112,7 @@ void initQuadric(){
 
 Model* Bottom;
 Model* Topo;
+Model* Trofeo;
 
 void initDiglet(){
 	Topo=new Model("Diglett.obj",50);
@@ -135,8 +136,18 @@ void initTopo(){
 	}
 }
 
+void initTrofeo(){
+	Trofeo=new Model("estrellica.obj",20);
+	Trofeo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
+	//Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
+	//Topo->addMesh(2);Topo->addColor(2,1.0,1.0,0.0);
+	Trofeo->moveToCenter();
+	Trofeo->useColor=true;
+	Trofeo->solid();
+}
+
 void initBottom(){
-	Bottom=new Model("Bottom.obj",1.5);
+	Bottom=new Model("Bottom.obj", 1.5);
 	Bottom->addMesh(2);Bottom->addColor(2,1.0,0.0,0.0);
 	Bottom->addMesh(3);Bottom->addColor(3,0.0,0.0,1.0);
 	Bottom->moveToCenter();
@@ -180,6 +191,7 @@ void initLightVariables(){
 void initVariables(){
 	initQuadric();
 	initTopo();
+	initTrofeo();
 	initBottom();
 	gameBackup=true;
 	MiCamara->SetCamera(0, 300, 250,
@@ -448,6 +460,8 @@ int draw_selectionMode(){
 	return tot;
 }
 
+bool win=false;
+
 void draw_sceneMenu(){
 	if(current_light==0){
 		draw_iluminationMode();
@@ -464,6 +478,10 @@ void draw_sceneMenu(){
 	}
 	draw_bottoms();
 	draw_topos();
+	if(win){
+		Objeto Trofe(Trofeo, objl::Vector3(0,80,120));
+		Trofe.draw();
+	}
 }
 
 void setInvisibleTopo(int i){
@@ -668,6 +686,11 @@ void updateTopos(){
 			}
 		} else if(std::string(mns)=="0006"){
 			game=!game;
+			win=true;
+			//write(MC->socketFD, "0005",4);
+		} else if(std::string(mns)=="0007"){
+			game=!game;
+			//write(MC->socketFD, "0005",4);
 		}
 		glutPostRedisplay();
 	}
@@ -829,7 +852,7 @@ int main(int argc, char **argv){
 	int port;
 	std::cout << "Port: ";
 	std::cin >> port;//MainConnection MC("192.168.8.108",port);
-	MC=new MainConnection("172.20.10.4", port);
+	MC=new MainConnection("192.168.160.211"/*"172.20.10.4"*/, port);
 	char buffer[100];
 	buffer[13]=0;
 	read(MC->socketFD,buffer,12);

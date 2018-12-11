@@ -61,8 +61,47 @@ std::string protocoloGame(std::string affect){
 bool existColaborator=0;
 int colaborator=0;
 int killer=0;
-int cantTopos=9;
+int cantTopos=0;
+int cantBlock=0;
 std::vector<bool> Topos;
+std::vector<bool> BTopos;
+std::vector<std::thread> blockTopos;
+
+void block(){
+	std::cout << "block2D\n";
+	cantBlock=0;
+	while(cantBlock<cantTopos){
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		int eleg=(rand()%(cantTopos-cantBlock))+1;
+		int aux=0;
+		for (int i=0;i<BTopos.size();i++){
+			if(!BTopos[i]){
+				aux++;
+			}
+			if(aux==eleg){
+				BTopos[i]=true;
+				cantBlock++;
+			}
+		}
+	}
+	int punt=0;
+	for (int i=0;i<Topos.size();i++){
+		if(Topos[i]){
+			punt++;
+		}
+	}
+	if(punt>(cantTopos-punt)){
+		write(colaborator, "0006",4);
+		write(killer, "0007",4);
+	} else {
+		write(killer, "0006",4);
+		write(colaborator, "0007",4);
+	}
+	cantTopos=0;
+	existColaborator=0;
+	colaborator=0;
+	killer=0;
+}
 
 void read2(int ConnectFD){
 	char buffer[250];
@@ -98,8 +137,12 @@ void read2(int ConnectFD){
 			}
 			std::string sendFile(buffer);
 			if(sendFile=="0001"){
+				cantTopos=9;
+				BTopos.resize(9);
+				for (int i=0;i<9;i++){
+					BTopos[i]=false;
+				}
 				if(!existColaborator){
-					std::cout << "colaborador\n";
 					write(ConnectFD, "00010",5);
 					Topos.clear();
 					Topos.resize(cantTopos);
@@ -108,6 +151,7 @@ void read2(int ConnectFD){
 				} else if(ConnectFD!=colaborator){
 					killer=ConnectFD;
 					write(ConnectFD, "00011",5);
+					blockTopos.push_back(std::thread(block));
 				} else {
 					write(ConnectFD, "00010",5);
 					//Topos.clear();
@@ -156,14 +200,14 @@ void read2(int ConnectFD){
 					stopo="0"+stopo;
 				}
 				if(ConnectFD==colaborator){
-					if(killer){
+					if(killer && BTopos[topo]==false){
 						write(killer,std::string("0005"+stopo).c_str(),6);
 					} else {
 						write(ConnectFD,std::string("0005"+stopo).c_str(),6);
 						Topos[topo]=!Topos[topo];
 					}
 				} else {
-					if(existColaborator){
+					if(existColaborator && BTopos[topo]==false){
 						write(colaborator,std::string("0005"+stopo).c_str(),6);
 					} else {
 						write(ConnectFD,std::string("0005"+stopo).c_str(),6);
@@ -183,6 +227,7 @@ void read2(int ConnectFD){
 						write(colaborator,"0006",4);
 					}
 				}
+				cantTopos=0;
 			}
 			/*int size_txt=atoi(buffer);
 			bzero(buffer, 4);
