@@ -370,7 +370,7 @@ bool draw_topos(){
 		if(!colaborator){
 			if(!Topos[i].invisible){
 				existTopos=true;
-				if(Block[i]){
+				if(Block.size() && Block[i]){
 					Topo->addColor(0,1.0,0.0,0.0);
 					Topos[i].draw(false, false, false);
 				} else {
@@ -378,7 +378,7 @@ bool draw_topos(){
 				}
 			} else {
 				//Topos[i].maxY=(Topos[i].model->min.Y+Topos[i].model->max.Y)/2;
-				if(Block[i]){
+				if(Block.size() && Block[i]){
 					Topo->addColor(0,0.0,1.0,0.0);
 					Topos[i].draw(true, false, true);
 				} else {
@@ -389,7 +389,7 @@ bool draw_topos(){
 			if(game){
 				//Topos[i].draw(true,false);
 				if(!Topos[i].invisible){
-					if(Block[i]){
+					if(Block.size() && Block[i]){
 						Topo->addColor(0,1.0,0.0,0.0);
 						Topos[i].draw(false, false, false);//true, false);
 					} else {
@@ -397,7 +397,7 @@ bool draw_topos(){
 					}
 				} else {
 					Topos[i].maxY=Topos[i].model->max.Y+100;
-					if(Block[i]){
+					if(Block.size() && Block[i]){
 						Topo->addColor(0,0.0,1.0,0.0);
 						Topos[i].draw(true, false, true, true);
 					} else {
@@ -788,6 +788,7 @@ void myDisplay(void){
 			gameBackup=game;
 			draw_sceneGame();
 		} else {
+			Block.clear();
 			if(gameBackup!=game){// || topooBackup!=topoo){
 				initTopo();
 				createTopos(1,400,200,250);
