@@ -68,20 +68,48 @@ std::vector<bool> BTopos;
 std::vector<std::thread> blockTopos;
 
 void block(){
-	std::cout << "block2D\n";
 	cantBlock=0;
 	while(cantBlock<cantTopos){
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		int eleg=(rand()%(cantTopos-cantBlock))+1;
-		int aux=0;
-		for (int i=0;i<BTopos.size();i++){
-			if(!BTopos[i]){
-				aux++;
+		int bl = rand()%3;
+		if(bl<1){
+			int eleg=(rand()%(cantTopos-cantBlock))+1;
+			int aux=0;
+			for (int i=0;i<BTopos.size();i++){
+				if(!BTopos[i]){
+					aux++;
+				}
+				if(aux==eleg){
+					BTopos[i]=true;
+					cantBlock++;
+					std::string mns="00080001"+std::to_string(i);
+					if(colaborator){
+						write(colaborator, mns.c_str(), 9);
+					}
+					if(killer){
+						write(killer, mns.c_str(), 9);
+					}
+					break;
+				}
 			}
-			if(aux==eleg){
-				BTopos[i]=true;
-				cantBlock++;
-			}
+		} else {
+			//bool kill=rand()%2;
+			//if(kill){
+				/*for (int i=0;i<BTopos.size();i++){
+					if(!BTopos[i] && !Topos[i]){
+						Topos[i]=!Topos[i];
+						std::string stopo=std::to_string(i);
+						if(stopo.size()==1){
+							stopo="0"+stopo;
+						}
+						stopo="0005"+stopo;
+						if(killer){
+								write(killer, stopo.c_str(), 6);
+						}
+						break;
+					}
+				}*/
+			//}
 		}
 	}
 	int punt=0;
@@ -91,16 +119,30 @@ void block(){
 		}
 	}
 	if(punt>(cantTopos-punt)){
-		write(colaborator, "0006",4);
-		write(killer, "0007",4);
+		if(colaborator){
+			write(colaborator, "0006",4);
+			existColaborator=false;
+			colaborator=0;
+		}
+		if(killer){
+			write(killer, "0007",4);
+			killer=0;
+		}
 	} else {
-		write(killer, "0006",4);
-		write(colaborator, "0007",4);
+		if(killer){
+			write(killer, "0006",4);
+			killer=0;
+		}
+		if(colaborator){
+			write(colaborator, "0007",4);
+			existColaborator=false;
+			colaborator=0;
+		}
 	}
-	cantTopos=0;
-	existColaborator=0;
-	colaborator=0;
-	killer=0;
+	//cantTopos=0;
+	//existColaborator=0;
+	//colaborator=0;
+	//killer=0;
 }
 
 void read2(int ConnectFD){
@@ -214,17 +256,17 @@ void read2(int ConnectFD){
 						Topos[topo]=!Topos[topo];
 					}
 				}
-			} else if(sendFile=="0005"){
+			} else if(sendFile=="0005"){//SALIR
 				if(ConnectFD==colaborator){
 					existColaborator=false;
 					colaborator=0;
 					if(killer){
-						write(killer,"0006",4);
+						write(killer,"0007",4);
 					}
-				} else {
+				} else if (ConnectFD==killer){
 					killer=0;
 					if(existColaborator){
-						write(colaborator,"0006",4);
+						write(colaborator,"0007",4);
 					}
 				}
 				cantTopos=0;

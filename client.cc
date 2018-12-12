@@ -138,7 +138,7 @@ void initTopo(){
 
 void initTrofeo(){
 	Trofeo=new Model("estrellica.obj",20);
-	Trofeo->addMesh(0);Topo->addColor(0,0.0,1.0,0.0);
+	Trofeo->addMesh(0);Topo->addColor(0,1.0,1.0,0.0);
 	//Topo->addMesh(1);Topo->addColor(1,1.0,1.0,0.0);
 	//Topo->addMesh(2);Topo->addColor(2,1.0,1.0,0.0);
 	Trofeo->moveToCenter();
@@ -308,11 +308,12 @@ void createBottoms(){
 	Bottoms[2].Colores[3]=objl::Vector3(1,0.0,0.0);
 }
 
+
 void createTopos(int n_topos=4,double amp=400, double dist=0, double CY=MiCamara->camView.Y/4){
 	int scens=1;
 	double angle;
 	if(n_topos>1){
-		angle = 360.0/(scens*(n_topos-1));
+		angle = 360.0/(scens*(n_topos/*-1*/));
 	} else {
 		angle = 0;
 	}
@@ -350,7 +351,7 @@ void draw_bottoms(){
 		//}
 	}
 	if(Bottoms[1].intersected){// && Bottoms[1].maxY<=max/* && WasIntersected[1]==0*/){
-		initGameConnection();
+		//initGameConnection();
 		//std::cout << "1111y000" << std::endl;
 	}
 	if(Bottoms[2].intersected){// && Bottoms[2].maxY<=max/* && WasIntersected[2]==0*/){
@@ -361,25 +362,47 @@ void draw_bottoms(){
 	}
 }
 
+std::vector<bool> Block;
+
 bool draw_topos(){
 	bool existTopos=false;
 	for (int i=0;i<Topos.size();i++){
 		if(!colaborator){
 			if(!Topos[i].invisible){
 				existTopos=true;
-				Topos[i].draw();
+				if(Block[i]){
+					Topo->addColor(0,1.0,0.0,0.0);
+					Topos[i].draw(false, false, false);
+				} else {
+					Topos[i].draw();
+				}
 			} else {
 				//Topos[i].maxY=(Topos[i].model->min.Y+Topos[i].model->max.Y)/2;
-				Topos[i].draw(true, false, true);
+				if(Block[i]){
+					Topo->addColor(0,0.0,1.0,0.0);
+					Topos[i].draw(true, false, true);
+				} else {
+					Topos[i].draw(true, true, true);
+				}
 			}
 		} else {//COLABORADOR
 			if(game){
 				//Topos[i].draw(true,false);
 				if(!Topos[i].invisible){
-					Topos[i].draw();//true, false);
+					if(Block[i]){
+						Topo->addColor(0,1.0,0.0,0.0);
+						Topos[i].draw(false, false, false);//true, false);
+					} else {
+						Topos[i].draw(false, true, false);
+					}
 				} else {
 					Topos[i].maxY=Topos[i].model->max.Y+100;
-					Topos[i].draw(true);
+					if(Block[i]){
+						Topo->addColor(0,0.0,1.0,0.0);
+						Topos[i].draw(true, false, true, true);
+					} else {
+						Topos[i].draw(true, true, true, true);
+					}
 				}
 			} else {
 				Topos[i].draw();
@@ -476,12 +499,12 @@ void draw_sceneMenu(){
 			}
 		}
 	}
-	draw_bottoms();
-	draw_topos();
 	if(win){
 		Objeto Trofe(Trofeo, objl::Vector3(0,80,120));
 		Trofe.draw();
 	}
+	draw_bottoms();
+	draw_topos();
 }
 
 void setInvisibleTopo(int i){
@@ -596,7 +619,11 @@ bool draw_scene(){
 							//leftC.draw(1);
 							double opac=std::max(float(0.0),float(PalmNormal.X));
 							if(opac>0.5){
-								MiCamara->rotate_c-=opac*0.3;
+								if(!game){
+									MiCamara->rotate_c-=opac*0.3;
+								} else {
+									MiCamara->rotate_c-=opac*0.6;
+								}
 							}
 							glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
 							//glColor4f(0.2,0.0,0.0,0.3);//leftC.draw(3);
@@ -611,7 +638,11 @@ bool draw_scene(){
 							//glColor4f(0.2,0.0,0.0,0.3);//rightC.draw(2);
 							double opac=std::max(float(0.0),float(-PalmNormal.X));
 							if(opac>0.5){
-								MiCamara->rotate_c+=opac*0.3;
+								if(!game){
+									MiCamara->rotate_c+=opac*0.3;
+								} else {
+									MiCamara->rotate_c+=opac*0.6;
+								}
 							}
 							glColor4f(1.0,0.1,0.1,0.1+opac*0.9);
 							rightC.draw(1);
@@ -675,6 +706,10 @@ void updateTopos(){
 		} else if(std::string(mns)=="0002"){
 			std::string mns=readServer(MC->socketFD);
 			cantTopos=stoi(mns);
+			Block.resize(cantTopos);
+			for (int i=0; i<cantTopos; i++){
+				Block[i]=0;
+			}
 		} else if(std::string(mns)=="0003"){
 			std::string mns=readServer(MC->socketFD);
 			for (int i=0;i<mns.size();i++){
@@ -687,10 +722,14 @@ void updateTopos(){
 		} else if(std::string(mns)=="0006"){
 			game=!game;
 			win=true;
-			//write(MC->socketFD, "0005",4);
+			write(MC->socketFD, "0005",4);//SALIR
 		} else if(std::string(mns)=="0007"){
 			game=!game;
-			//write(MC->socketFD, "0005",4);
+			win=false;
+			write(MC->socketFD, "0005",4);//SALIR
+		} else if(std::string(mns)=="0008"){
+			std::string mns=readServer(MC->socketFD);
+			Block[stoi(mns)]=true;
 		}
 		glutPostRedisplay();
 	}
@@ -766,6 +805,11 @@ void myDisplay(void){
 		bool imove=draw_scene();
 		display();
 	glPopMatrix();
+	if(!gameBackup){
+		if(Bottoms[1].intersected){// && Bottoms[1].maxY<=max/* && WasIntersected[1]==0*/){
+			initGameConnection();
+		}
+	}
 	SetLight( LOCAL_MyLights[0] );
 	//glutSwapBuffers();//glDisable(GL_BLEND);//glEnable(GL_DEPTH_TEST);//glPopMatrix();//glFlush();
 	NEWHAND=false;
@@ -852,7 +896,7 @@ int main(int argc, char **argv){
 	int port;
 	std::cout << "Port: ";
 	std::cin >> port;//MainConnection MC("192.168.8.108",port);
-	MC=new MainConnection("192.168.160.211"/*"172.20.10.4"*/, port);
+	MC=new MainConnection("10.0.1.7"/*"172.20.10.4"*/, port);
 	char buffer[100];
 	buffer[13]=0;
 	read(MC->socketFD,buffer,12);
