@@ -897,7 +897,7 @@ int main(int argc, char **argv){
 	int port;
 	std::cout << "Port: ";
 	std::cin >> port;//MainConnection MC("192.168.8.108",port);
-	MC=new MainConnection("10.0.1.7"/*"172.20.10.4"*/, port);
+	MC=new MainConnection("172.20.10.2", port);
 	char buffer[100];
 	buffer[13]=0;
 	read(MC->socketFD,buffer,12);

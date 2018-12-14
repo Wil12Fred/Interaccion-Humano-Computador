@@ -16,7 +16,7 @@ Compilación servidor (Linux):
 - c++ -std=c++11 server.cpp -o server -pthread
 
 Compilación cliente (Linux):
-- c++ -o client -std=c++11 client.cc -I./ -I./Leap -I./Model -Wno-deprecated -lGl -lGLU -lglut [LEAP]/LEAPSDK/lib/x64/libLeap.so -Wl,-rpath,[LEAP]/LeapSDK/lib/x64 -lpng -pthread
+- c++ -o client -std=c++11 client.cc -I./ -I./Leap -I./Model -Wno-deprecated -lGL -lGLU -lglut [LEAP]/LEAPSDK/lib/x64/libLeap.so -Wl,-rpath,[LEAP]/LeapSDK/lib/x64 -lpng -pthread
 
 Recomendación uso Leap Motion
 - Posición frente a la pantalla, entre 15-30 cm.
